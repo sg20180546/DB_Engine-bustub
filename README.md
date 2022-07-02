@@ -1,3 +1,25 @@
+# Structure Database Engine Toy Project : bustub
+
+## 1. Project 1 (clear at 3/7/2022)
+### 1) LRU Replacer
+* Last Recently Used Algorithm by double linked list
+* Unpinned Pages' physical frame id is hang on list
+* Most recently used unpinned page is hang on front of list.
+* Implementation)
+   - If Pin, frame_id is delete from list. O(N)
+   - If Unpin, frame id is add to list. O(N)
+   - If Victim, At the end of list is removed and return its value. O(1)
+### 2) Buffer Pool Manager
+   - Managing class Page in physical frame, which is VM Concept
+   - Comparing BufferPoolManager::free_list_ to LRU list, free list is 'explicitly DELETED physical frame' list but LRU list store 'UNPINNED POTENTIALLY evicted physical frame' that is still hang on to physical frame
+   - Physical frame and Page table declare as Page* page and std::unordered_map<page_id_t,frame_id_t> page_table
+### 3) Parallel Buffer Pool Manager
+   - By divide entire pool size by number of instance, rather than 1 instance manage whole pool
+   - Latch : Semaphore protecting SGA(Memory Resource, not block)
+   - Small critical section makes parallelism higher
+   
+## 2. Project 2
+
 <img src="logo/bustub-whiteborder.svg" alt="BusTub Logo" height="200">
 
 -----------------
