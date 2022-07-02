@@ -21,7 +21,7 @@ namespace bustub {
 
 // NOLINTNEXTLINE
 // Check whether pages containing terminal characters can be recovered
-TEST(ParallelBufferPoolManagerTest, DISABLED_BinaryDataTest) {
+TEST(ParallelBufferPoolManagerTest, BinaryDataTest) {
   const std::string db_name = "test.db";
   const size_t buffer_pool_size = 10;
   const size_t num_instances = 5;
@@ -88,7 +88,7 @@ TEST(ParallelBufferPoolManagerTest, DISABLED_BinaryDataTest) {
 }
 
 // NOLINTNEXTLINE
-TEST(ParallelBufferPoolManagerTest, DISABLED_SampleTest) {
+TEST(ParallelBufferPoolManagerTest, SampleTest) {
   const std::string db_name = "test.db";
   const size_t buffer_pool_size = 10;
   const size_t num_instances = 5;
@@ -121,6 +121,7 @@ TEST(ParallelBufferPoolManagerTest, DISABLED_SampleTest) {
   auto page4 = bpm->FetchPage(4);
   snprintf(page4->GetData(), PAGE_SIZE, "World");
   EXPECT_EQ(0, strcmp(page4->GetData(), "World"));
+  // printf("124\n\n");
   bpm->UnpinPage(4, true);
 
   // Scenario: After unpinning pages {0, 1, 2, 3, 4} and pinning pages {0, 1, 2, 3},

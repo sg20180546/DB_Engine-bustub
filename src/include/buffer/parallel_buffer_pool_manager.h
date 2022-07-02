@@ -17,6 +17,8 @@
 #include "storage/disk/disk_manager.h"
 #include "storage/page/page.h"
 
+#include "buffer/buffer_pool_manager_instance.h"
+
 namespace bustub {
 
 class ParallelBufferPoolManager : public BufferPoolManager {
@@ -27,6 +29,8 @@ class ParallelBufferPoolManager : public BufferPoolManager {
    * @param pool_size the pool size of each BufferPoolManagerInstance
    * @param disk_manager the disk manager
    * @param log_manager the log manager (for testing only: nullptr = disable logging)
+   * make many thread
+   * each request, thread pick bufferpoolmanger instance by page id
    */
   ParallelBufferPoolManager(size_t num_instances, size_t pool_size, DiskManager *disk_manager,
                             LogManager *log_manager = nullptr);
@@ -44,7 +48,7 @@ class ParallelBufferPoolManager : public BufferPoolManager {
    * @param page_id id of page
    * @return pointer to the BufferPoolManager responsible for handling given page id
    */
-  auto GetBufferPoolManager(page_id_t page_id) -> BufferPoolManager *;
+  auto GetBufferPoolManager(page_id_t page_id) -> BufferPoolManagerInstance *;
 
   /**
    * Fetch the requested page from the buffer pool.
@@ -86,5 +90,12 @@ class ParallelBufferPoolManager : public BufferPoolManager {
    * Flushes all the pages in the buffer pool to disk.
    */
   void FlushAllPgsImp() override;
+
+  // page_id_t GetUniformBPM() { return (uniform_dist_page_var_++)%(num_instances_); }
+private:
+  BufferPoolManagerInstance** bpmi_;
+  size_t pool_size_;
+  size_t num_instances_;
+  size_t uniform_dist_page_var_=0;
 };
 }  // namespace bustub
