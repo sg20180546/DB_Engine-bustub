@@ -67,15 +67,21 @@ class Page {
   inline void SetLSN(lsn_t lsn) { memcpy(GetData() + OFFSET_LSN, &lsn, sizeof(lsn_t)); }
 
   inline void WPinLatch() { pinlatch_.WLock(); }
-  inline void WUnPinLatch() { pinlatch_.WUnlock();}
-  inline void RPinLatch() { pinlatch_.RLock();}
-  inline void RUnPinLatch() {pinlatch_.RUnlock();}
-  inline int ModifyPinCount(int dx) { if(pin_count_+dx>=0) pin_count_+=dx; return pin_count_; }
- 
-  inline void SetPageId(page_id_t page_id){page_id_=page_id; }
+  inline void WUnPinLatch() { pinlatch_.WUnlock(); }
+  inline void RPinLatch() { pinlatch_.RLock(); }
+  inline void RUnPinLatch() { pinlatch_.RUnlock(); }
+  inline int ModifyPinCount(int dx) {
+    if (pin_count_ + dx >= 0) {
+      pin_count_ += dx;
+    }
+    return pin_count_;
+  }
 
-  inline void SetPageIsDirty(){ is_dirty_=true; }
-  inline void UnsetPageIsDirty(){is_dirty_=false;}
+  inline void SetPageId(page_id_t page_id) { page_id_ = page_id; }
+
+  inline void SetPageIsDirty() { is_dirty_ = true; }
+  inline void UnsetPageIsDirty() { is_dirty_ = false; }
+
  protected:
   static_assert(sizeof(page_id_t) == 4);
   static_assert(sizeof(lsn_t) == 4);

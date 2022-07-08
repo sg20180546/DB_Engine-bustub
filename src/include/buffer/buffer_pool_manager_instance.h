@@ -58,14 +58,15 @@ class BufferPoolManagerInstance : public BufferPoolManager {
 
   /** @return pointer to all the pages in the buffer pool */
   auto GetPages() -> Page * { return pages_; }
-  void Latch() { latch_.lock();}
-  void UnLatch() {latch_.unlock();}
+  void Latch() { latch_.lock(); }
+  void UnLatch() { latch_.unlock(); }
+
  protected:
   /**
    * Fetch the requested page from the buffer pool.
    * @param page_id id of page to be fetched
    * @return the requested page
-   * 
+   *
    */
   auto FetchPgImp(page_id_t page_id) -> Page * override;
 
@@ -74,12 +75,12 @@ class BufferPoolManagerInstance : public BufferPoolManager {
    * @param page_id id of page to be unpinned
    * @param is_dirty true if the page should be marked as dirty, false otherwise
    * @return false if the page pin count is <= 0 before this call, true otherwise
-   * 
+   *
    * if dirty
    *    page->dirty=true
-   * if Page->pin_count==1   
+   * if Page->pin_count==1
    *    Get frame_id by page_id
-   *    Call LRUReplacer::Unpin 
+   *    Call LRUReplacer::Unpin
    */
   auto UnpinPgImp(page_id_t page_id, bool is_dirty) -> bool override;
 
@@ -103,7 +104,7 @@ class BufferPoolManagerInstance : public BufferPoolManager {
    * Creates a new page in the buffer pool.
    * @param[out] page_id id of created page
    * @return nullptr if no new pages could be created, otherwise pointer to new page
-   * 
+   *
    */
   auto NewPgImp(page_id_t *page_id) -> Page * override;
 
@@ -139,9 +140,8 @@ class BufferPoolManagerInstance : public BufferPoolManager {
    * @param page_id
    */
   void ValidatePageId(page_id_t page_id) const;
-  
-  auto GetFrameID() -> frame_id_t;
 
+  auto GetFrameID() -> frame_id_t;
 
   /** Number of pages in the buffer pool. */
   const size_t pool_size_;
@@ -169,7 +169,7 @@ class BufferPoolManagerInstance : public BufferPoolManager {
   // size_t cur_pool_size_=0;
   // std::mutex replacer_latch_;
   // std::mutex free_list_latch_;
-  // std::mutex page_table_latch_;  
+  // std::mutex page_table_latch_;
   // std::mutex* physical_frame_latch_;
   // std::mutex next_page_id_latch_;
   // std::list<frame_id_t>::iterator list_iter;

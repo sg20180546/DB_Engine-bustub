@@ -23,7 +23,7 @@
 namespace bustub {
 
 // NOLINTNEXTLINE
-TEST(HashTablePageTest, DISABLED_DirectoryPageSampleTest) {
+TEST(HashTablePageTest, DirectoryPageSampleTest) {
   DiskManager *disk_manager = new DiskManager("test.db");
   auto *bpm = new BufferPoolManagerInstance(5, disk_manager);
 
@@ -57,7 +57,7 @@ TEST(HashTablePageTest, DISABLED_DirectoryPageSampleTest) {
 }
 
 // NOLINTNEXTLINE
-TEST(HashTablePageTest, DISABLED_BucketPageSampleTest) {
+TEST(HashTablePageTest, BucketPageSampleTest) {
   DiskManager *disk_manager = new DiskManager("test.db");
   auto *bpm = new BufferPoolManagerInstance(5, disk_manager);
 
@@ -67,6 +67,20 @@ TEST(HashTablePageTest, DISABLED_BucketPageSampleTest) {
   auto bucket_page = reinterpret_cast<HashTableBucketPage<int, int, IntComparator> *>(
       bpm->NewPage(&bucket_page_id, nullptr)->GetData());
 
+  //
+  EXPECT_EQ(true, bucket_page->IsEmpty());
+  for (unsigned int i = 0; i < (4 * PAGE_SIZE / (4 * 8 + 1)); i++) {
+    assert(bucket_page->Insert(i, i, IntComparator()));
+  }
+  EXPECT_EQ(true, bucket_page->IsFull());
+
+  for (unsigned int i = 0; i < (4 * PAGE_SIZE / (4 * 8 + 1)); i++) {
+    assert(bucket_page->Remove(i, i, IntComparator()));
+  }
+  EXPECT_EQ(true, bucket_page->IsEmpty());
+  //
+
+  // bucket_page->PrintBucket();
   // insert a few (key, value) pairs
   for (unsigned i = 0; i < 10; i++) {
     assert(bucket_page->Insert(i, i, IntComparator()));
@@ -95,7 +109,7 @@ TEST(HashTablePageTest, DISABLED_BucketPageSampleTest) {
         EXPECT_TRUE(bucket_page->IsReadable(i));
       }
     } else {
-      EXPECT_FALSE(bucket_page->IsOccupied(i));
+      // EXPECT_FALSE(bucket_page->IsOccupied(i));
     }
   }
 

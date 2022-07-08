@@ -92,10 +92,10 @@ class ParallelBufferPoolManager : public BufferPoolManager {
   void FlushAllPgsImp() override;
 
   // page_id_t GetUniformBPM() { return (uniform_dist_page_var_++)%(num_instances_); }
-private:
-  BufferPoolManagerInstance** bpmi_;
+ private:
+  BufferPoolManagerInstance **bpmi_;
   size_t pool_size_;
   size_t num_instances_;
-  size_t uniform_dist_page_var_=0;
+  size_t uniform_dist_page_var_ = 0;
 };
 }  // namespace bustub

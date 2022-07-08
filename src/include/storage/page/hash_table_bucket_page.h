@@ -137,8 +137,17 @@ class HashTableBucketPage {
    */
   void PrintBucket();
 
+  inline void UnSetReadable(uint32_t bucket_idx);
+
  private:
+  auto HighestOneBit(char bitmap) -> int;
+
+  auto CheckBitmap(char bitmap) -> bool;
+
+  auto SwitchBitmap(char bitmap) -> bool;
   //  For more on BUCKET_ARRAY_SIZE see storage/page/hash_table_page_defs.h
+  // size_t empty_slots_=BUCKET_ARRAY_SIZE;
+  // size_t avail_slots_=0;
   char occupied_[(BUCKET_ARRAY_SIZE - 1) / 8 + 1];
   // 0 if tombstone/brand new (never occupied), 1 otherwise.
   char readable_[(BUCKET_ARRAY_SIZE - 1) / 8 + 1];

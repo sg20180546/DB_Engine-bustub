@@ -119,11 +119,11 @@ TEST(StarterTest, AdditionTest) {
   auto matrix0 = std::make_unique<RowMatrix<int>>(3, 3);
 
   const std::vector<int> source0{1, 4, 2, 5, 2, -1, 0, 3, 1};
-  EXPECT_NO_THROW (matrix0->FillFrom(source0));
+  EXPECT_NO_THROW(matrix0->FillFrom(source0));
 
   for (int i = 0; i < matrix0->GetRowCount(); i++) {
     for (int j = 0; j < matrix0->GetColumnCount(); j++) {
-      EXPECT_NO_THROW(matrix0->GetElement(i,j));
+      EXPECT_NO_THROW(matrix0->GetElement(i, j));
       EXPECT_EQ(source0[i * matrix0->GetColumnCount() + j], matrix0->GetElement(i, j));
     }
   }
@@ -134,7 +134,7 @@ TEST(StarterTest, AdditionTest) {
 
   for (int i = 0; i < matrix1->GetRowCount(); i++) {
     for (int j = 0; j < matrix1->GetColumnCount(); j++) {
-      EXPECT_NO_THROW(matrix1->GetElement(i,j));
+      EXPECT_NO_THROW(matrix1->GetElement(i, j));
       EXPECT_EQ(source1[i * matrix1->GetColumnCount() + j], matrix1->GetElement(i, j));
     }
   }

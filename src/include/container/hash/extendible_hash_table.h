@@ -161,8 +161,10 @@ class ExtendibleHashTable {
    */
   void Merge(Transaction *transaction, const KeyType &key, const ValueType &value);
 
+  inline auto GetBucketIdxByKey(HashTableDirectoryPage *htdp, KeyType key) -> uint32_t;
   // member variables
   page_id_t directory_page_id_;
+  // HashTableDirectoryPage* htdp;
   BufferPoolManager *buffer_pool_manager_;
   KeyComparator comparator_;
 

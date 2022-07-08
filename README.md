@@ -19,6 +19,13 @@
    - Small critical section makes parallelism higher
    
 ## 2. Project 2
+### 1) Hash table bucket page, Hash table directory page
+
+### 2) Extendible Hash Table
+
+### 3) Concurrency
+
+---------------------------------------------------
 
 <img src="logo/bustub-whiteborder.svg" alt="BusTub Logo" height="200">
 
