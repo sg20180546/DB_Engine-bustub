@@ -14,17 +14,19 @@
 
 namespace bustub {
 
-LRUReplacer::LRUReplacer(size_t num_pages) : num_pages_(0), max_pages_(num_pages) {
+LRUReplacer::LRUReplacer(size_t num_pages) : num_pages_(0) {
   // init head_
-  head_.next = &head_;
-  head_.prev = &head_;
+  head_.next_ = &head_;
+  head_.prev_ = &head_;
 }
 
 LRUReplacer::~LRUReplacer() = default;
 
 auto LRUReplacer::Victim(frame_id_t *frame_id) -> bool {
-  struct LRUReplacer::LinkedList *node = head_.prev;
-  if (node == &head_) return false;
+  struct LRUReplacer::LinkedList *node = head_.prev_;
+  if (node == &head_) {
+    return false;
+  }
   (*frame_id) = node->frame_id_;
   DeleteNode(node);
   num_pages_--;
@@ -42,7 +44,9 @@ void LRUReplacer::Pin(frame_id_t frame_id) {
 
 void LRUReplacer::Unpin(frame_id_t frame_id) {
   struct LRUReplacer::LinkedList *node = LRUReplacer::FindNode(frame_id);
-  if (node) return;
+  if (node != nullptr) {
+    return;
+  }
   LRUReplacer::AddNode(frame_id);
   num_pages_++;
 }
@@ -50,30 +54,31 @@ void LRUReplacer::Unpin(frame_id_t frame_id) {
 auto LRUReplacer::Size() -> size_t { return num_pages_; }
 
 struct LRUReplacer::LinkedList *LRUReplacer::FindNode(frame_id_t frame_id) {
-  struct LRUReplacer::LinkedList *ret = NULL, *node = head_.next;
+  struct LRUReplacer::LinkedList *ret = nullptr;
+  struct LRUReplacer::LinkedList *node = head_.next_;
   while (node->frame_id_ != -1) {
     if (node->frame_id_ == frame_id) {
       ret = node;
       break;
     }
-    node = node->next;
+    node = node->next_;
   }
   return ret;
 }
 
 void LRUReplacer::DeleteNode(struct LRUReplacer::LinkedList *node) {
-  node->prev->next = node->next;
-  node->next->prev = node->prev;
+  node->prev_->next_ = node->next_;
+  node->next_->prev_ = node->prev_;
   delete node;
 }
 
 void LRUReplacer::AddNode(frame_id_t frame_id) {
   struct LRUReplacer::LinkedList *node = new LRUReplacer::LinkedList;
   node->frame_id_ = frame_id;
-  node->next = head_.next;
-  node->prev = &head_;
-  head_.next = node;
-  node->next->prev = node;
+  node->next_ = head_.next_;
+  node->prev_ = &head_;
+  head_.next_ = node;
+  node->next_->prev_ = node;
 }
 
 }  // namespace bustub

@@ -25,16 +25,20 @@ auto HASH_TABLE_BUCKET_TYPE::GetValue(KeyType key, KeyComparator cmp, std::vecto
   char *occupied = occupied_;
   int i = 0;
   int scope = 8;
-  while ((*occupied)) {
+  while ((*occupied) != 0) {
     for (; i < scope; i++) {
       if (!cmp(key, array_[i].first)) {
-        if (IsReadable(i)) result->push_back(array_[i].second);
+        if (IsReadable(i)) {
+          result->push_back(array_[i].second);
+        }
       }
     }
     occupied++;
     scope += 8;
   }
-  if (result->size()) ret = true;
+  if (!result->empty()) {
+    ret = true;
+  }
   return ret;
 }
 
@@ -45,11 +49,13 @@ auto HASH_TABLE_BUCKET_TYPE::Insert(KeyType key, ValueType value, KeyComparator 
   GetValue(key, cmp, &res);
   int size = res.size();
   for (i = 0; i < size; i++) {
-    if (res[i] == value) return false;
+    if (res[i] == value) {
+      return false;
+    }
   }
   char *readable = readable_;
   // printf("readable num %u",(unsigned char)*readable);
-  while ((unsigned char)(*readable) == 255) {
+  while (static_cast<unsigned char>(*readable) == 255) {
     readable++;
   }
   /*
@@ -62,7 +68,9 @@ auto HASH_TABLE_BUCKET_TYPE::Insert(KeyType key, ValueType value, KeyComparator 
   //     break;
   // }
   for (i = 0; i < 8; i++) {
-    if ((1UL << i) & (~temp)) break;
+    if (((1UL << i) & (~temp)) != 0U) {
+      break;
+    }
     // 0000000 -> i = 0
     // 0000001 -> i = 1
     // 0000011 -> i = 2
@@ -98,7 +106,7 @@ auto HASH_TABLE_BUCKET_TYPE::Remove(KeyType key, ValueType value, KeyComparator 
   int i = 0;
   int j = 8;
   // printf("here");
-  while ((unsigned char)(*occupied)) {
+  while (static_cast<unsigned char>(*occupied) != 0U) {
     for (; i < j; i++) {
       // printf("%d  ",i);
       if (!cmp(key, array_[i].first)) {
@@ -130,7 +138,9 @@ template <typename KeyType, typename ValueType, typename KeyComparator>
 auto HASH_TABLE_BUCKET_TYPE::KeyAt(uint32_t bucket_idx) const -> KeyType {
   // printf("key at %d : ",bucket_idx);
   // std::cout<<array_[bucket_idx].first<<"\n";
-  if (IsReadable(bucket_idx)) return array_[bucket_idx].first;
+  if (IsReadable(bucket_idx)) {
+    return array_[bucket_idx].first;
+  }
   return {};
 }
 
@@ -172,8 +182,10 @@ void HASH_TABLE_BUCKET_TYPE::SetReadable(uint32_t bucket_idx) {
 
 template <typename KeyType, typename ValueType, typename KeyComparator>
 auto HASH_TABLE_BUCKET_TYPE::IsFull() -> bool {
-  for (long unsigned int i = 0; i < sizeof(readable_); i++) {
-    if (~readable_[i]) return false;
+  for (uint64_t i = 0; i < sizeof(readable_); i++) {
+    if (~readable_[i]) {
+      return false;
+    }
   }
   return true;
 }
@@ -185,8 +197,10 @@ auto HASH_TABLE_BUCKET_TYPE::NumReadable() -> uint32_t {
 
 template <typename KeyType, typename ValueType, typename KeyComparator>
 auto HASH_TABLE_BUCKET_TYPE::IsEmpty() -> bool {
-  for (long unsigned int i = 0; i < sizeof(readable_); i++) {
-    if (readable_[i]) return false;
+  for (uint64_t i = 0; i < sizeof(readable_); i++) {
+    if (readable_[i]) {
+      return false;
+    }
   }
   return true;
 }

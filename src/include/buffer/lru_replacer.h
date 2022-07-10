@@ -28,7 +28,7 @@ class LRUReplacer : public Replacer {
  public:
   struct LinkedList {
     /* data */
-    struct LRUReplacer::LinkedList *next, *prev;
+    struct LRUReplacer::LinkedList *next_, *prev_;
     frame_id_t frame_id_ = -1;
   };
 
@@ -56,7 +56,6 @@ class LRUReplacer : public Replacer {
 
  private:
   size_t num_pages_;
-  size_t max_pages_;
   struct LRUReplacer::LinkedList *FindNode(frame_id_t frame_id);
   void DeleteNode(struct LRUReplacer::LinkedList *node);
   void AddNode(frame_id_t frame_id);

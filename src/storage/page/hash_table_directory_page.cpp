@@ -41,8 +41,11 @@ void HashTableDirectoryPage::SetBucketPageId(uint32_t bucket_idx, page_id_t buck
 auto HashTableDirectoryPage::Size() -> uint32_t { return 0; }
 
 auto HashTableDirectoryPage::CanShrink() -> bool {
-  for (;;) {
-    return false;
+  uint32_t interval = 1UL << (9 - global_depth_);
+  for (uint32_t i = 0; i < DIRECTORY_ARRAY_SIZE; i += interval) {
+    if (GetLocalDepth(i) >= global_depth_) {
+      return false;
+    }
   }
   return true;
 }

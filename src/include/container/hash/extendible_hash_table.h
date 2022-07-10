@@ -145,7 +145,6 @@ class ExtendibleHashTable {
    * @return whether or not the insertion was successful
    */
   auto SplitInsert(Transaction *transaction, const KeyType &key, const ValueType &value) -> bool;
-
   /**
    * Optionally merges an empty bucket into it's pair.  This is called by Remove,
    * if Remove makes a bucket empty.
@@ -162,6 +161,7 @@ class ExtendibleHashTable {
   void Merge(Transaction *transaction, const KeyType &key, const ValueType &value);
 
   inline auto GetBucketIdxByKey(HashTableDirectoryPage *htdp, KeyType key) -> uint32_t;
+
   // member variables
   page_id_t directory_page_id_;
   // HashTableDirectoryPage* htdp;

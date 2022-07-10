@@ -85,7 +85,7 @@ auto ParallelBufferPoolManager::NewPgImp(page_id_t *page_id) -> Page * {
     bpmi->Latch();
     ret = bpmi->NewPage(page_id);
     bpmi->UnLatch();
-    if (ret) {
+    if (ret != nullptr) {
       break;
     }
   }

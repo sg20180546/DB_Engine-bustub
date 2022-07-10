@@ -24,11 +24,11 @@ namespace bustub {
 // NOLINTNEXTLINE
 
 // NOLINTNEXTLINE
-TEST(HashTableTest, DISABLED_SampleTest) {
+TEST(HashTableTest, SampleTest) {
   auto *disk_manager = new DiskManager("test.db");
   auto *bpm = new BufferPoolManagerInstance(50, disk_manager);
   ExtendibleHashTable<int, int, IntComparator> ht("blah", bpm, IntComparator(), HashFunction<int>());
-
+  EXPECT_FALSE(ht.Remove(nullptr, 1, 1));
   // insert a few values
   for (int i = 0; i < 5; i++) {
     ht.Insert(nullptr, i, i);
@@ -75,14 +75,13 @@ TEST(HashTableTest, DISABLED_SampleTest) {
       }
     }
   }
-
+  // printf("4\n\n");
   ht.VerifyIntegrity();
 
   // look for a key that does not exist
   std::vector<int> res;
   ht.GetValue(nullptr, 20, &res);
   EXPECT_EQ(0, res.size());
-
   // delete some values
   for (int i = 0; i < 5; i++) {
     EXPECT_TRUE(ht.Remove(nullptr, i, i));
@@ -96,7 +95,6 @@ TEST(HashTableTest, DISABLED_SampleTest) {
       EXPECT_EQ(2 * i, res[0]);
     }
   }
-
   ht.VerifyIntegrity();
 
   // delete all values

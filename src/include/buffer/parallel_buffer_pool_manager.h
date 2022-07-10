@@ -96,6 +96,5 @@ class ParallelBufferPoolManager : public BufferPoolManager {
   BufferPoolManagerInstance **bpmi_;
   size_t pool_size_;
   size_t num_instances_;
-  size_t uniform_dist_page_var_ = 0;
 };
 }  // namespace bustub

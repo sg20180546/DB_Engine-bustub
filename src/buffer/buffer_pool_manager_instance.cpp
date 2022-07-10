@@ -90,7 +90,9 @@ auto BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) -> Page * {
   // 4.   Set the page ID output parameter. Return a pointer to P.
 
   frame_id_t frame_id = GetFrameID();
-  if (frame_id == -1) return nullptr;
+  if (frame_id == -1) {
+    return nullptr;
+  }
   // printf("left free_list : ");
 
   class Page *page = &pages_[frame_id];
@@ -98,7 +100,9 @@ auto BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) -> Page * {
   // printf("newpgimp frame n : %d pid %d\n",frame_id,page_id_tmp);
   page_table_.erase(page_id_tmp);
 
-  if (page->IsDirty()) disk_manager_->WritePage(page->GetPageId(), page->GetData());
+  if (page->IsDirty()) {
+    disk_manager_->WritePage(page->GetPageId(), page->GetData());
+  }
   page->ResetMemory();
 
   page_id_tmp = AllocatePage();
@@ -154,7 +158,9 @@ auto BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) -> bool {
     page->RPinLatch();
     int pin_count = page->GetPinCount();
     page->RUnPinLatch();
-    if (pin_count) return false;
+    if (pin_count != 0) {
+      return false;
+    }
 
     if (page->IsDirty()) {
       disk_manager_->WritePage(page_id, page->GetData());
