@@ -28,9 +28,10 @@ TEST(HashTableTest, SampleTest) {
   auto *disk_manager = new DiskManager("test.db");
   auto *bpm = new BufferPoolManagerInstance(50, disk_manager);
   ExtendibleHashTable<int, int, IntComparator> ht("blah", bpm, IntComparator(), HashFunction<int>());
-  EXPECT_FALSE(ht.Remove(nullptr, 1, 1));
+
   // insert a few values
-  for (int i = 0; i < 5; i++) {
+  int testcase = 3000;
+  for (int i = 0; i < testcase; i++) {
     ht.Insert(nullptr, i, i);
     std::vector<int> res;
     ht.GetValue(nullptr, i, &res);
@@ -38,27 +39,31 @@ TEST(HashTableTest, SampleTest) {
     EXPECT_EQ(i, res[0]);
   }
 
+  // printf("point 1\n\n");
   ht.VerifyIntegrity();
-
   // check if the inserted values are all there
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < testcase; i++) {
     std::vector<int> res;
     ht.GetValue(nullptr, i, &res);
     EXPECT_EQ(1, res.size()) << "Failed to keep " << i << std::endl;
+    // if(i==0){
+    //   for(size_t i=0;i<res.size();i++){
+    //     std::cout<<" "<<res[i]<<" ";
+    //   }
+    //   printf("\n");}
     EXPECT_EQ(i, res[0]);
   }
-
+  // exit(0);
   ht.VerifyIntegrity();
-
   // insert one more value for each key
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < testcase; i++) {
     if (i == 0) {
       // duplicate values for the same key are not allowed
       EXPECT_FALSE(ht.Insert(nullptr, i, 2 * i));
     } else {
       EXPECT_TRUE(ht.Insert(nullptr, i, 2 * i));
     }
-    ht.Insert(nullptr, i, 2 * i);
+    // ht.Insert(nullptr, i, 2 * i);
     std::vector<int> res;
     ht.GetValue(nullptr, i, &res);
     if (i == 0) {
@@ -66,24 +71,30 @@ TEST(HashTableTest, SampleTest) {
       EXPECT_EQ(1, res.size());
       EXPECT_EQ(i, res[0]);
     } else {
-      EXPECT_EQ(2, res.size());
+      EXPECT_EQ(2, res.size()) << "Failed at " << i << std::endl;
+      // assert(res.size()==2);
       if (res[0] == i) {
         EXPECT_EQ(2 * i, res[1]);
       } else {
         EXPECT_EQ(2 * i, res[0]);
         EXPECT_EQ(i, res[1]);
+        assert(i == res[1]);
       }
     }
   }
-  // printf("4\n\n");
+  // for(int i=0;i<testcase;i++) {
+  //   ht.Insert(nullptr,i,3*i);
+  // }
   ht.VerifyIntegrity();
 
   // look for a key that does not exist
+  // printf("point 0\n\n");
   std::vector<int> res;
-  ht.GetValue(nullptr, 20, &res);
-  EXPECT_EQ(0, res.size());
+  ht.GetValue(nullptr, 249, &res);
+  EXPECT_EQ(2, res.size());
+  // std::cout<<"249 value "<<res[0]<<" "<<res[1]<<"\n\n";
   // delete some values
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < testcase; i++) {
     EXPECT_TRUE(ht.Remove(nullptr, i, i));
     std::vector<int> res;
     ht.GetValue(nullptr, i, &res);
@@ -98,12 +109,17 @@ TEST(HashTableTest, SampleTest) {
   ht.VerifyIntegrity();
 
   // delete all values
-  for (int i = 0; i < 5; i++) {
+  {
+    std::vector<int> res;
+    ht.GetValue(nullptr, 249, &res);
+    EXPECT_EQ(1, res.size());
+  }
+  for (int i = 0; i < testcase; i++) {
     if (i == 0) {
       // (0, 0) has been deleted
       EXPECT_FALSE(ht.Remove(nullptr, i, 2 * i));
     } else {
-      EXPECT_TRUE(ht.Remove(nullptr, i, 2 * i));
+      EXPECT_TRUE(ht.Remove(nullptr, i, 2 * i)) << "Falied at " << i << std::endl;
     }
   }
 

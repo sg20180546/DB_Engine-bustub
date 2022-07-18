@@ -25,7 +25,7 @@ auto HASH_TABLE_BUCKET_TYPE::GetValue(KeyType key, KeyComparator cmp, std::vecto
   char *occupied = occupied_;
   int i = 0;
   int scope = 8;
-  while ((*occupied) != 0) {
+  while ((*occupied) != 0 && occupied != readable_) {
     for (; i < scope; i++) {
       if (!cmp(key, array_[i].first)) {
         if (IsReadable(i)) {
@@ -54,46 +54,20 @@ auto HASH_TABLE_BUCKET_TYPE::Insert(KeyType key, ValueType value, KeyComparator 
     }
   }
   char *readable = readable_;
-  // printf("readable num %u",(unsigned char)*readable);
   while (static_cast<unsigned char>(*readable) == 255) {
     readable++;
   }
-  /*
-      111111=1+2+4+8+16+32+64=127
-  */
-
   char temp = *readable;
-  // for(i=7;i<=0;i--){
-  //   if((1UL<<i)&temp)
-  //     break;
-  // }
   for (i = 0; i < 8; i++) {
     if (((1UL << i) & (~temp)) != 0U) {
       break;
     }
-    // 0000000 -> i = 0
-    // 0000001 -> i = 1
-    // 0000011 -> i = 2
   }
-
   int index = (readable - readable_) * 8 + i;
-  // printf("read idx : %ld\n",readable-readable_);
-  // printf("insert at %d\n\n",index);
-  // std::cout<<array_[2].first<<" "<<array_[2].second<<"\n";
-  // std::cout<<"insert key : "<<key<<" value :"<<value<<" at "<<index<<"" <<"\n\n";
-
   array_[index].first = key;
   array_[index].second = value;
-
   SetReadable(index);
   SetOccupied(index);
-  // avail_slots_--;
-  // 1011001 0100110
-
-  // for(int i=outer_index<<3;i<;i++){
-
-  //     if(array_[i].first==key) return false;
-  // }
 
   return true;
 }

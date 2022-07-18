@@ -36,6 +36,7 @@ HASH_TABLE_TYPE::ExtendibleHashTable(const std::string &name, BufferPoolManager 
   for (int i = 1; i < DIRECTORY_ARRAY_SIZE; i++) {
     htdp->SetBucketPageId(i, -1);
   }
+  //  std::cout<<"Bucekt earr size"<<BUCKET_ARRAY_SIZE<<"\n";
 }
 
 /*****************************************************************************
@@ -50,7 +51,8 @@ HASH_TABLE_TYPE::ExtendibleHashTable(const std::string &name, BufferPoolManager 
  */
 template <typename KeyType, typename ValueType, typename KeyComparator>
 auto HASH_TABLE_TYPE::Hash(KeyType key) -> uint32_t {
-  return static_cast<uint32_t>(hash_fn_.GetHash(key));
+  uint32_t ret = static_cast<uint32_t>(hash_fn_.GetHash(key));
+  return ret;
 }
 
 template <typename KeyType, typename ValueType, typename KeyComparator>
@@ -89,7 +91,7 @@ auto HASH_TABLE_TYPE::GetValue(Transaction *transaction, const KeyType &key, std
 
   table_latch_.RLock();
   page_id_t page_id = htdp->GetBucketPageId(bucket_idx);
-
+  // std::cout<<"find key "<<key<<" page_id "<<page_id<<"\n\n";
   Page *page = buffer_pool_manager_->FetchPage(page_id);
   page->RLatch();
   auto htb = reinterpret_cast<HASH_TABLE_BUCKET_TYPE *>(page->GetData());
@@ -108,6 +110,7 @@ auto HASH_TABLE_TYPE::GetValue(Transaction *transaction, const KeyType &key, std
  *****************************************************************************/
 template <typename KeyType, typename ValueType, typename KeyComparator>
 auto HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const ValueType &value) -> bool {
+  // std::cout<<"inserting "<<key;
   bool ret;
   uint32_t bucket_idx;
   page_id_t page_id;
@@ -116,60 +119,92 @@ auto HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const
   table_latch_.RLock();
   bucket_idx = GetBucketIdxByKey(htdp, key);
   page_id = htdp->GetBucketPageId(bucket_idx);
+  // printf("  bucket idx %u page_id %u\n",bucket_idx,page_id);
   table_latch_.RUnlock();
 
   Page *page = buffer_pool_manager_->FetchPage(page_id);
   page->WLatch();
   HASH_TABLE_BUCKET_TYPE *htb = reinterpret_cast<HASH_TABLE_BUCKET_TYPE *>(page->GetData());
-
+  // std::cout<<"key "<<key<<"and value "<<value<<" is insert at page id "<<page_id<<"\n";
   if (htb->IsFull()) {
+    // printf("is full\n\n\n");
     table_latch_.WLock();
     uint32_t gd;
 
     if (htdp->GetLocalDepth(bucket_idx) == (gd = htdp->GetGlobalDepth())) {
+      // printf("increase global depth : %u++\n",gd);
+      for (int i = 0; i < 512; i += 1UL << (9 - gd)) {
+        htdp->SetLocalDepth(i + (1UL << (9 - gd - 1)), htdp->GetLocalDepth(i));
+      }
       htdp->IncrGlobalDepth();
-      gd = GetGlobalDepth();
+      gd = htdp->GetGlobalDepth();
+      // error point
     }
     htdp->IncrLocalDepth(bucket_idx);
-
+    // printf("insert lock point here 2\n");
     page_id_t new_page_id;
     Page *new_page;
     uint32_t new_bucket_idx = bucket_idx + (1 << (9 - gd));
-    htdp->SetLocalDepth(new_bucket_idx, htdp->GetLocalDepth(bucket_idx));
+    // printf("new bucket idx : %u\n\n\n",new_bucket_idx);
+    uint32_t ld = htdp->GetLocalDepth(bucket_idx);
+    assert(ld != 0);
+    htdp->SetLocalDepth(new_bucket_idx, ld);
 
+    // printf("cur bucket idx : %u new bucket idx :%u  local dpeth %u\n",bucket_idx,new_bucket_idx,ld);
+    // printf("new local depth %u global dpeth %u\n",htdp->GetLocalDepth(new_bucket_idx),gd);
     if ((new_page_id = htdp->GetBucketPageId(new_bucket_idx)) == -1) {
       new_page = buffer_pool_manager_->NewPage(&new_page_id);
       htdp->SetBucketPageId(new_bucket_idx, new_page_id);
+      // printf("cur page id : %u new page id : %u\n",page_id,new_page_id);
     } else {
       new_page = buffer_pool_manager_->FetchPage(new_page_id);
     }
+
     HASH_TABLE_BUCKET_TYPE *htb = reinterpret_cast<HASH_TABLE_BUCKET_TYPE *>(page->GetData());
     HASH_TABLE_BUCKET_TYPE *new_htb = reinterpret_cast<HASH_TABLE_BUCKET_TYPE *>(new_page->GetData());
-
+    // printf("insert lock point here 3\n");
     // // copy correct thing to new bucket
-    int i = 0;
-    while (htb->IsOccupied(i)) {
+    uint64_t i = 0;
+    // uint32_t gm= htdp->GetGlobalDepthMask();
+    // printf("copying %ld , mask : %u\n",BUCKET_ARRAY_SIZE,gm);
+    int moved = 0;
+
+    while (i < BUCKET_ARRAY_SIZE && htb->IsOccupied(i)) {
       if (htb->IsReadable(i)) {
+        // printf("%4lu",i);
         KeyType key = htb->KeyAt(i);
-        if (GetBucketIdxByKey(htdp, key) == new_bucket_idx) {
+        uint32_t tmp = GetBucketIdxByKey(htdp, key);
+        // printf("new table %4u ",tmp);
+        if (tmp == new_bucket_idx) {
+          //  printf("%4lu",i);
+          // std::c
+          // std::cout<<tmp<<" gd "<<gd<<"\n";
+          moved++;
+          // std::cout<<key<<"("<<htb->ValueAt(i)<<") ";
           new_htb->Insert(key, htb->ValueAt(i), comparator_);
           htb->RemoveAt(i);
+        } else {
+          // std::cout<<tmp<<" gd "<<gd<<"\n";
         }
       }
       i++;
     }
-
+    // printf("\nmoved : %d ,new bucket idx %u new page id %u\n",moved,new_bucket_idx,new_page_id);
+    // printf("insert lock point here 4\n");
+    page->WUnlatch();
     table_latch_.WUnlock();
     buffer_pool_manager_->UnpinPage(directory_page_id_, true, nullptr);
     buffer_pool_manager_->UnpinPage(page_id, false, nullptr);
     buffer_pool_manager_->UnpinPage(new_page_id, true, nullptr);
     ret = this->Insert(transaction, key, value);
+
   } else {
     ret = htb->Insert(key, value, comparator_);
+    page->WUnlatch();
     buffer_pool_manager_->UnpinPage(page_id, false, nullptr);
     buffer_pool_manager_->UnpinPage(directory_page_id_, false, nullptr);
   }
-  page->WUnlatch();
+
   return ret;
 }
 
@@ -207,38 +242,57 @@ auto HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key, const
   page = buffer_pool_manager_->FetchPage(page_id);
   page->WLatch();
   HASH_TABLE_BUCKET_TYPE *htb = reinterpret_cast<HASH_TABLE_BUCKET_TYPE *>(page->GetData());
+  // std::cout<<"remove at "<<key<<" "<<value<<" page_id "<<page_id<<"\n";
   ret = htb->Remove(key, value, comparator_);
-
+  // if(comparator_(key,0)) assert(ret);
   global_depth = GetGlobalDepth();
   local_depth = htdp->GetLocalDepth(bucket_idx);
   if (local_depth != 0 && htb->IsEmpty()) {
-    uint32_t bucket_frame = Hash(key) & htdp->GetGlobalDepthMask();
-    uint32_t interval = global_depth - local_depth + 1;
+    // printf("is empty at page id :%u , local depth %u, global depth %u\n",page_id,local_depth, global_depth);
+    table_latch_.WLock();
+    // uint32_t bucket_frame = Hash(key) & htdp->GetGlobalDepthMask();
+    // bucket_frame=bucket_frame>>(32-global_depth);
+
+    // uint32_t interval = global_depth - local_depth + 1;
     uint32_t buddy_idx;
-    if (bucket_frame != ((bucket_frame >> (interval)) << interval)) {
-      buddy_idx = bucket_idx - (1UL << (9 - local_depth));
-      if (htdp->GetLocalDepth(buddy_idx) == local_depth) {
-        page_id_t buddy_page_id = htdp->GetBucketPageId(bucket_idx);
-        Page *buddy_page = buffer_pool_manager_->FetchPage(buddy_page_id);
-        buddy_page->RLatch();
-        // strcpy(page->GetData(),buddy_page->GetData());
-        snprintf(page->GetData(), PAGE_SIZE, "%s", buddy_page->GetData());
-        buddy_page->RUnlatch();
+    uint32_t buddy_local_depth;
+    uint32_t interval = 10 - global_depth;
+    buddy_idx = bucket_idx + (1UL << interval);
+
+    // 1 : 0 -> 0 , 256 -> 0
+    // 2 : 0 -> 0, 128 -> 0, 256->256 , 384->256
+    // printf("bucket idx %u interval : %u\n",bucket_idx,interval);
+    if (bucket_idx != (bucket_idx >> interval) << interval) {
+      //( buddy idx ||interval|| bucket idx-empty )
+      buddy_idx = bucket_idx - (1UL << (interval - 1));
+      // printf("bucket idx %u buddy idx : %u\n",bucket_idx,buddy_idx);
+      if ((buddy_local_depth = htdp->GetLocalDepth(buddy_idx)) == local_depth) {
         htdp->DecrLocalDepth(buddy_idx);
         htdp->DecrLocalDepth(bucket_idx);
-        buffer_pool_manager_->UnpinPage(buddy_page_id, true);
       }
     } else {
-      buddy_idx = bucket_idx + (1UL << (9 - local_depth));
-      if (htdp->GetLocalDepth(buddy_idx) == local_depth) {
+      // ( bucket idx-empty ||interval|| buddy idx)
+      buddy_idx = bucket_idx + (1UL << (interval - 1));
+      buddy_local_depth = htdp->GetLocalDepth(buddy_idx);
+      if (buddy_local_depth == local_depth) {
+        // copy buddy content to bucket content;
+        page_id_t buddy_page_id = htdp->GetBucketPageId(buddy_idx);
+        Page *buddy_page = buffer_pool_manager_->FetchPage(buddy_page_id);
+        buddy_page->RLatch();
+        memmove(page->GetData(), buddy_page->GetData(), PAGE_SIZE);
+        memset(buddy_page->GetData(), 0, PAGE_SIZE);
+        buddy_page->RUnlatch();
+
         htdp->DecrLocalDepth(bucket_idx);
         htdp->DecrLocalDepth(buddy_idx);
+        buffer_pool_manager_->UnpinPage(buddy_page_id, true);
       }
     }
 
     if (htdp->CanShrink()) {
       htdp->DecrGlobalDepth();
     }
+    table_latch_.WUnlock();
   }
   page->WUnlatch();
   buffer_pool_manager_->UnpinPage(page_id, true, nullptr);
@@ -279,15 +333,32 @@ void HASH_TABLE_TYPE::VerifyIntegrity() {
 
 template <typename KeyType, typename ValueType, typename KeyComparator>
 inline auto HASH_TABLE_TYPE::GetBucketIdxByKey(HashTableDirectoryPage *htdp, KeyType key) -> uint32_t {
-  // phyiscal bucket_idx
-  uint32_t global_depth = htdp->GetGlobalDepth();
-  uint64_t bucket_frame = Hash(key) & (htdp->GetGlobalDepthMask());
-  uint32_t bucket_idx = bucket_frame * (1UL << (9 - global_depth));
+  // 00
+  uint32_t global_depth = htdp->GetGlobalDepth();  // 2
+  uint32_t mask = htdp->GetGlobalDepthMask();      // 110000000000
 
-  // logical, bucket_idx remove offset
+  uint32_t bucket_frame = Hash(key) & mask;  // 1000000000 or 0000000000000000
+
+  bucket_frame = bucket_frame >> (32 - global_depth);
+
+  uint32_t bucket_idx = bucket_frame * (1UL << (9 - global_depth));  // 1* 1UL<<7 == 1* 128
+
   uint32_t local_depth = htdp->GetLocalDepth(bucket_idx);
   uint32_t interval = 9 - local_depth;
-  return (bucket_idx >> interval) << interval;
+  uint32_t ret = ((bucket_idx >> interval) << interval);
+  // printf("bucket frame : %u local depth %u ret %u ",bucket_frame,local_depth,ret);
+
+  return ret;  // 1000 0000>>7<<7=
+  // 1 0000 0000 >>
+}
+template <typename KeyType, typename ValueType, typename KeyComparator>
+inline auto HASH_TABLE_TYPE::ReverseBit(uint32_t x) -> uint32_t {
+  x = ((x >> 1) & 0x55555555u) | ((x & 0x55555555u) << 1);
+  x = ((x >> 2) & 0x33333333u) | ((x & 0x33333333u) << 2);
+  x = ((x >> 4) & 0x0f0f0f0fu) | ((x & 0x0f0f0f0fu) << 4);
+  x = ((x >> 8) & 0x00ff00ffu) | ((x & 0x00ff00ffu) << 8);
+  x = ((x >> 16) & 0xffffu) | ((x & 0xffffu) << 16);
+  return x;
 }
 
 /*****************************************************************************

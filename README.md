@@ -10,170 +10,50 @@
    - If Unpin, frame id is add to list. O(N)
    - If Victim, At the end of list is removed and return its value. O(1)
 ### 2) Buffer Pool Manager
-   - Managing class Page in physical frame, which is VM Concept
-   - Comparing BufferPoolManager::free_list_ to LRU list, free list is 'explicitly DELETED physical frame' list but LRU list store 'UNPINNED POTENTIALLY evicted physical frame' that is still hang on to physical frame
-   - Physical frame and Page table declare as Page* page and std::unordered_map<page_id_t,frame_id_t> page_table
+* Managing class Page in physical frame, which is VM Concept
+* Comparing BufferPoolManager::free_list_ to LRU list, free list is 'explicitly DELETED physical frame' list but LRU list store 'UNPINNED POTENTIALLY evicted physical frame' that is still hang on to physical frame
+* Physical frame and Page table declare as Page* page and std::unordered_map<page_id_t,frame_id_t> page_table
 ### 3) Parallel Buffer Pool Manager
-   - By divide entire pool size by number of instance, rather than 1 instance manage whole pool
-   - Latch : Semaphore protecting SGA(Memory Resource, not block)
-   - Small critical section makes parallelism higher
+* By divide entire pool size by number of instance, rather than 1 instance manage whole pool
+* Latch : Semaphore protecting SGA(Memory Resource, not block)
+* Small critical section makes parallelism higher
    
-## 2. Project 2
+## 2. Project 2 (clear at 18/7/2022)
 ### 1) Hash table bucket page, Hash table directory page
-
+* Hash Table Directory manage 512 Hash table bucket page
+* 512 local_depths_=512 bytes , 512 bucket_page_ids=2048 bytes
 ### 2) Extendible Hash Table
+* Hashing 
+   - To use MSB as Hash, `~0UL << (32 - global_depth_)` is used to Hash Mask
+   - bucket frame is Logical Sequence of bucket index
+   - substitute bucket frame to Physical Sequence(page id) by local depth and global depth
+   - e.g. : 
+   `   Depth : 1`
+   `   Frame	0	1`
+   `   Index	0	256`
+   `   PageId	1	2	`
 
+   `  Depth :  2`
+   `  Frame    00	01	10	11`
+   `  Index	   0  128	256	384`
+   `  PageId	1	3	2	2 `
+* Insert
+   - If Bucket is already Full
+      - If local depth is equal to global depth, need to set ALL buckets local depth to point accurate bucket
+      - Rehashing all components of the bucket and to copy those to new bucket
+      - reexecute Insert (recursive call)
+* GetValue
+   - Hash Key to find correct bucket index (Function GetBucketIdxByKey)
+   - retrive page id by bucket index, and execute HashTableBucketPage->GetValue
+* Remove
+   - If Bucket is Empty after Remove
+      - If Empty Bucket remains after merged to Buddy Bucket, Copy All Contents of Buddy Bucket to Empty Bucket  : `Empty  ||interval|| Buddy`
+      - If Buddy Bucket remains after merged to Empty Bucket : ` Buddy ||interval|| Empty`
+      - Decrease local depth of Buddy/Empty Buckets
+      - Check CanShrink() to decrease global depth
 ### 3) Concurrency
+* Use Two Phase Lock(Latch) to prevent Deadlock
+
+
 
 ---------------------------------------------------
-
-<img src="logo/bustub-whiteborder.svg" alt="BusTub Logo" height="200">
-
------------------
-
-[![Build Status](https://github.com/cmu-db/bustub/actions/workflows/cmake.yml/badge.svg)](https://github.com/cmu-db/bustub/actions/workflows/cmake.yml)
-
-BusTub is a relational database management system built at [Carnegie Mellon University](https://db.cs.cmu.edu) for the [Introduction to Database Systems](https://15445.courses.cs.cmu.edu) (15-445/645) course. This system was developed for educational purposes and should not be used in production environments.
-
-**WARNING: IF YOU ARE A STUDENT IN THE CLASS, DO NOT DIRECTLY FORK THIS REPO. DO NOT PUSH PROJECT SOLUTIONS PUBLICLY. THIS IS AN ACADEMIC INTEGRITY VIOLATION AND CAN LEAD TO GETTING YOUR DEGREE REVOKED, EVEN AFTER YOU GRADUATE.**
-
-## Cloning this Repository
-
-The following instructions are adapted from the Github documentation on [duplicating a repository](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-on-github/duplicating-a-repository). The procedure below walks you through creating a private BusTub repository that you can use for development.
-
-1. Go [here](https://github.com/new) to create a new repository under your account. Pick a name (e.g. `bustub-private`) and select **Private** for the repository visibility level.
-2. On your development machine, create a bare clone of the public BusTub repository:
-   ```
-   $ git clone --bare https://github.com/cmu-db/bustub.git bustub-public
-   ```
-3. Next, [mirror](https://git-scm.com/docs/git-push#Documentation/git-push.txt---mirror) the public BusTub repository to your own private BusTub repository. Suppose your GitHub name is `student` and your repository name is `bustub-private`. The procedure for mirroring the repository is then:
-   ```
-   $ cd bustub-public
-   
-   # If you pull / push over HTTPS
-   $ git push --mirror https://github.com/student/bustub-private.git
-
-   # If you pull / push over SSH
-   $ git push --mirror git@github.com:student/bustub-private.git
-   ```
-   This copies everything in the public BusTub repository to your own private repository. You can now delete your local clone of the public repository:
-   ```
-   $ cd ..
-   $ rm -rf bustub-public
-   ```
-4. Clone your private repository to your development machine:
-   ```
-   # If you pull / push over HTTPS
-   $ git clone https://github.com/student/bustub-private.git
-
-   # If you pull / push over SSH
-   $ git clone git@github.com:student/bustub-private.git
-   ```
-5. Add the public BusTub repository as a second remote. This allows you to retrieve changes from the CMU-DB repository and merge them with your solution throughout the semester:
-   ```
-   $ git remote add public https://github.com/cmu-db/bustub.git
-   ```
-   You can verify that the remote was added with the following command:
-   ```
-   $ git remote -v
-   origin	https://github.com/student/bustub-private.git (fetch)
-   origin	https://github.com/student/bustub-private.git (push)
-   public	https://github.com/cmu-db/bustub.git (fetch)
-   public	https://github.com/cmu-db/bustub.git (push)
-   ```
-6. You can now pull in changes from the public BusTub repository as needed with:
-   ```
-   $ git pull public master
-   ```
-
-We suggest working on your projects in separate branches. If you do not understand how Git branches work, [learn how](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging). If you fail to do this, you might lose all your work at some point in the semester, and nobody will be able to help you.
-
-## Build
-
-### Linux / Mac
-
-To ensure that you have the proper packages on your machine, run the following script to automatically install them:
-
-```
-$ sudo build_support/packages.sh
-```
-
-Then run the following commands to build the system:
-
-```
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make
-```
-
-If you want to compile the system in debug mode, pass in the following flag to cmake:
-Debug mode:
-
-```
-$ cmake -DCMAKE_BUILD_TYPE=Debug ..
-$ make
-```
-This enables [AddressSanitizer](https://github.com/google/sanitizers), which can generate false positives for overflow on STL containers. If you encounter this, define the environment variable `ASAN_OPTIONS=detect_container_overflow=0`.
-
-### Windows
-
-If you are using Windows 10, you can use the Windows Subsystem for Linux (WSL) to develop, build, and test Bustub. All you need is to [Install WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10). You can just choose "Ubuntu" (no specific version) in Microsoft Store. Then, enter WSL and follow the above instructions.
-
-If you are using CLion, it also [works with WSL](https://blog.jetbrains.com/clion/2018/01/clion-and-linux-toolchain-on-windows-are-now-friends).
-
-## Testing
-
-```
-$ cd build
-$ make check-tests
-```
-
-## Build environment
-
-If you have trouble getting cmake or make to run, an easy solution is to create a virtual container to build in. There are two options available:
-
-### Vagrant
-
-First, make sure you have Vagrant and Virtualbox installed
-```
-$ sudo apt update
-$ sudo apt install vagrant virtualbox
-```
-
-From the repository directory, run this command to create and start a Vagrant box:
-
-```
-$ vagrant up
-```
-
-This will start a Vagrant box running Ubuntu 20.02 in the background with all the packages needed. To access it, type
-
-```
-$ vagrant ssh
-```
-
-to open a shell within the box. You can find Bustub's code mounted at `/bustub` and run the commands mentioned above like normal.
-
-### Docker
-
-First, make sure that you have docker installed:
-```
-$ sudo apt update
-$ sudo apt install docker
-```
-
-From the repository directory, run these commands to create a Docker image and container:
-
-```
-$ docker build . -t bustub
-$ docker create -t -i --name bustub -v $(pwd):/bustub bustub bash
-```
-
-This will create a Docker image and container. To run it, type:
-
-```
-$ docker start -a -i bustub
-```
-
-to open a shell within the box. You can find Bustub's code mounted at `/bustub` and run the commands mentioned above like normal.
