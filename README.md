@@ -27,16 +27,20 @@
    - To use MSB as Hash, `~0UL << (32 - global_depth_)` is used to Hash Mask
    - bucket frame is Logical Sequence of bucket index
    - substitute bucket frame to Physical Sequence(page id) by local depth and global depth
-   - e.g. : 
-   `   Depth : 1`
-   `   Frame	0	1`
-   `   Index	0	256`
-   `   PageId	1	2	`
+   - e.g. : ` Depth : 1`
+   
+   
+![image](https://user-images.githubusercontent.com/81512075/182036389-a1030440-d2ae-4901-96e2-2f8b0f5d59dd.png)
 
    `  Depth :  2`
-   `  Frame    00	01	10	11`
-   `  Index	   0  128	256	384`
-   `  PageId	1	3	2	2 `
+
+![image](https://user-images.githubusercontent.com/81512075/182036399-1485d6b6-32af-48f4-9731-6abc486a6068.png)
+
+   `  Depth : 3`
+   
+![image](https://user-images.githubusercontent.com/81512075/182036406-a727026f-e691-48ff-8a38-f44bdf41cb7e.png)
+
+
 * Insert
    - If Bucket is already Full
       - If local depth is equal to global depth, need to set ALL buckets local depth to point accurate bucket
