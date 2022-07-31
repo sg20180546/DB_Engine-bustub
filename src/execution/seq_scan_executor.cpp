@@ -18,7 +18,7 @@ SeqScanExecutor::SeqScanExecutor(ExecutorContext *exec_ctx, const SeqScanPlanNod
                                 : AbstractExecutor(exec_ctx), plan_(plan), iterator_(nullptr,RID(),nullptr) {}
 
 void SeqScanExecutor::Init() {
-    std::cout<<"seqscanexec init\n";
+    // std::cout<<"seqscanexec init\n";
     uint32_t column_idx;
     std::string column_name;
     uint32_t column_count=plan_->OutputSchema()->GetColumnCount();    
@@ -34,14 +34,18 @@ void SeqScanExecutor::Init() {
 }
 
 auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
-    // assert(key_attrs_.size()==2);
+
     const AbstractExpression* predicate=plan_->GetPredicate();
     Schema schema=table_info_->schema_;
     const Schema* key_schema=plan_->OutputSchema();
     TableIterator end =table_info_->table_.get()->End();
 
+    if(iterator_==end) {
+        return false;
+    }
+    
     if(predicate!=nullptr) {
-        for(;iterator_!=end;) {
+        for(;iterator_!=end;iterator_++) {
             Tuple tp= iterator_->KeyFromTuple(table_info_->schema_,*key_schema,key_attrs_);
             if(predicate->Evaluate(&tp,&schema).GetAs<bool>()) {
                 *tuple=tp;
@@ -49,13 +53,10 @@ auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
                 iterator_++;
                 return true;
             }
-            iterator_++;
+            // iterator_++;
         }
         return false;
     } else {
-        if(iterator_==end) {
-            return false;
-        }
         Tuple tp=iterator_->KeyFromTuple(table_info_->schema_,*key_schema,key_attrs_);
         *tuple=tp;
         *rid=tp.GetRid();

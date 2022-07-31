@@ -47,6 +47,7 @@ class SeqScanExecutor : public AbstractExecutor {
   /** @return The output schema for the sequential scan */
   auto GetOutputSchema() -> const Schema * override { return plan_->OutputSchema(); }
 
+  auto GetName()-> std::string override { return std::string("SeqScanExecutor");}
  private:
   /** The sequential scan plan node to be executed */
   const SeqScanPlanNode *plan_;

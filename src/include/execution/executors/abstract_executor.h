@@ -49,8 +49,10 @@ class AbstractExecutor {
   /** @return The schema of the tuples that this executor produces */
   virtual auto GetOutputSchema() -> const Schema * = 0;
 
+  virtual auto GetName() -> std::string { return std::string("AbstractExecutor"); }
   /** @return The executor context in which this executor runs */
   auto GetExecutorContext() -> ExecutorContext * { return exec_ctx_; }
+
 
  protected:
   /** The executor context in which the executor runs */

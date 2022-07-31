@@ -174,8 +174,9 @@ TEST_F(ExecutorTest, SimpleSelectInsertTest) {
   }
 
   // Execute the insert
+  // std::cout<<"insert start\n";
   GetExecutionEngine()->Execute(insert_plan.get(), nullptr, GetTxn(), GetExecutorContext());
-
+  // std::cout<<"insert finish\n";
   // Now iterate through both tables, and make sure they have the same data
   const Schema *out_schema2;
   std::unique_ptr<AbstractPlanNode> scan_plan2;

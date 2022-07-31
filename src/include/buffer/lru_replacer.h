@@ -60,11 +60,6 @@ class LRUReplacer : public Replacer {
   void DeleteNode(struct LRUReplacer::LinkedList *node);
   void AddNode(frame_id_t frame_id);
   struct LinkedList head_;
-
-  // TODO(student): implement me!
-  // data structure<frame_id> Last recently used first
-  // -> double linked list?
-  // last pointer should be need
 };
 
 }  // namespace bustub

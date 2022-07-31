@@ -23,7 +23,7 @@ LRUReplacer::LRUReplacer(size_t num_pages) : num_pages_(0) {
 LRUReplacer::~LRUReplacer() = default;
 
 auto LRUReplacer::Victim(frame_id_t *frame_id) -> bool {
-  struct LRUReplacer::LinkedList *node = head_.prev_;
+  struct LinkedList *node = head_.prev_;
   if (node == &head_) {
     return false;
   }
@@ -34,7 +34,7 @@ auto LRUReplacer::Victim(frame_id_t *frame_id) -> bool {
 }
 
 void LRUReplacer::Pin(frame_id_t frame_id) {
-  struct LRUReplacer::LinkedList *node = LRUReplacer::FindNode(frame_id);
+  struct LinkedList *node = FindNode(frame_id);
   if (node == nullptr) {
     return;
   }
@@ -43,19 +43,18 @@ void LRUReplacer::Pin(frame_id_t frame_id) {
 }
 
 void LRUReplacer::Unpin(frame_id_t frame_id) {
-  struct LRUReplacer::LinkedList *node = LRUReplacer::FindNode(frame_id);
-  if (node != nullptr) {
-    return;
+  struct LinkedList *node = FindNode(frame_id);
+  if (node == nullptr) {
+    AddNode(frame_id);
+    num_pages_++;
   }
-  LRUReplacer::AddNode(frame_id);
-  num_pages_++;
 }
 
 auto LRUReplacer::Size() -> size_t { return num_pages_; }
 
 struct LRUReplacer::LinkedList *LRUReplacer::FindNode(frame_id_t frame_id) {
-  struct LRUReplacer::LinkedList *ret = nullptr;
-  struct LRUReplacer::LinkedList *node = head_.next_;
+  struct LinkedList *ret = nullptr;
+  struct LinkedList *node = head_.next_;
   while (node->frame_id_ != -1) {
     if (node->frame_id_ == frame_id) {
       ret = node;
@@ -73,7 +72,7 @@ void LRUReplacer::DeleteNode(struct LRUReplacer::LinkedList *node) {
 }
 
 void LRUReplacer::AddNode(frame_id_t frame_id) {
-  struct LRUReplacer::LinkedList *node = new LRUReplacer::LinkedList;
+  struct LinkedList *node = new LRUReplacer::LinkedList;
   node->frame_id_ = frame_id;
   node->next_ = head_.next_;
   node->prev_ = &head_;
