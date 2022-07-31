@@ -83,7 +83,11 @@ class ExtendibleHashTable {
    * Helper function to verify the integrity of the extendible hash table's directory.  Do not touch.
    */
   void VerifyIntegrity();
-
+  void PrintPageMap() {
+    HashTableDirectoryPage *htdp =
+        reinterpret_cast<HashTableDirectoryPage *>(buffer_pool_manager_->FetchPage(directory_page_id_));
+      htdp->PrintPageMap();
+  }
  private:
   /**
    * Hash - simple helper to downcast MurmurHash's 64-bit hash to 32-bit
@@ -162,6 +166,7 @@ class ExtendibleHashTable {
 
   inline auto GetBucketIdxByKey(HashTableDirectoryPage *htdp, KeyType key) -> uint32_t;
   inline auto ReverseBit(uint32_t) -> uint32_t;
+
   // member variables
   page_id_t directory_page_id_;
   // HashTableDirectoryPage* htdp;

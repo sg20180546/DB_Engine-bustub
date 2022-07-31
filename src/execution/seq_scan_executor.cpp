@@ -14,10 +14,54 @@
 
 namespace bustub {
 
-SeqScanExecutor::SeqScanExecutor(ExecutorContext *exec_ctx, const SeqScanPlanNode *plan) : AbstractExecutor(exec_ctx) {}
+SeqScanExecutor::SeqScanExecutor(ExecutorContext *exec_ctx, const SeqScanPlanNode *plan) 
+                                : AbstractExecutor(exec_ctx), plan_(plan), iterator_(nullptr,RID(),nullptr) {}
 
-void SeqScanExecutor::Init() {}
+void SeqScanExecutor::Init() {
+    std::cout<<"seqscanexec init\n";
+    uint32_t column_idx;
+    std::string column_name;
+    uint32_t column_count=plan_->OutputSchema()->GetColumnCount();    
+    table_info_=exec_ctx_->GetCatalog()->GetTable(plan_->GetTableOid());
+    iterator_=table_info_->table_.get()->Begin(exec_ctx_->GetTransaction());
 
-auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool { return false; }
+    for(uint32_t i=0;i<column_count;i++){
+        column_name.assign(plan_->OutputSchema()->GetColumn(i).GetName());
+        column_idx=table_info_->schema_.GetColIdx(column_name);
+        // if not found, exception handling
+        key_attrs_.push_back(column_idx);
+    }
+}
+
+auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
+    // assert(key_attrs_.size()==2);
+    const AbstractExpression* predicate=plan_->GetPredicate();
+    Schema schema=table_info_->schema_;
+    const Schema* key_schema=plan_->OutputSchema();
+    TableIterator end =table_info_->table_.get()->End();
+
+    if(predicate!=nullptr) {
+        for(;iterator_!=end;) {
+            Tuple tp= iterator_->KeyFromTuple(table_info_->schema_,*key_schema,key_attrs_);
+            if(predicate->Evaluate(&tp,&schema).GetAs<bool>()) {
+                *tuple=tp;
+                *rid=tp.GetRid();
+                iterator_++;
+                return true;
+            }
+            iterator_++;
+        }
+        return false;
+    } else {
+        if(iterator_==end) {
+            return false;
+        }
+        Tuple tp=iterator_->KeyFromTuple(table_info_->schema_,*key_schema,key_attrs_);
+        *tuple=tp;
+        *rid=tp.GetRid();
+        iterator_++;
+        return true;
+    }
+}
 
 }  // namespace bustub

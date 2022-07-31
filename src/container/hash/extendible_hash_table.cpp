@@ -155,8 +155,11 @@ auto HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const
     if ((new_page_id = htdp->GetBucketPageId(new_bucket_idx)) == -1) {
       new_page = buffer_pool_manager_->NewPage(&new_page_id);
       htdp->SetBucketPageId(new_bucket_idx, new_page_id);
-      // printf("cur page id : %u new page id : %u\n",page_id,new_page_id);
+      printf("there is no cacheed page cur page id : %u new page id : %u",page_id,new_page_id);
+      std::cout<<"key : "<<key<<"\n";
     } else {
+      printf("there is already cached page : %u",new_page_id);
+      std::cout<<"key : "<<key<<"\n";
       new_page = buffer_pool_manager_->FetchPage(new_page_id);
     }
 
@@ -230,7 +233,7 @@ auto HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key, const
   bool ret;
   HashTableDirectoryPage *htdp = FetchDirectoryPage();
   uint32_t bucket_idx;
-  uint32_t global_depth;
+  // uint32_t global_depth;
   uint32_t local_depth;
   page_id_t page_id;
   Page *page;
@@ -245,36 +248,32 @@ auto HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key, const
   // std::cout<<"remove at "<<key<<" "<<value<<" page_id "<<page_id<<"\n";
   ret = htb->Remove(key, value, comparator_);
   // if(comparator_(key,0)) assert(ret);
-  global_depth = GetGlobalDepth();
+  // global_depth = GetGlobalDepth();
   local_depth = htdp->GetLocalDepth(bucket_idx);
   if (local_depth != 0 && htb->IsEmpty()) {
     // printf("is empty at page id :%u , local depth %u, global depth %u\n",page_id,local_depth, global_depth);
     table_latch_.WLock();
-    // uint32_t bucket_frame = Hash(key) & htdp->GetGlobalDepthMask();
-    // bucket_frame=bucket_frame>>(32-global_depth);
-
-    // uint32_t interval = global_depth - local_depth + 1;
     uint32_t buddy_idx;
-    uint32_t buddy_local_depth;
-    uint32_t interval = 10 - global_depth;
-    buddy_idx = bucket_idx + (1UL << interval);
+    uint32_t interval = 10 - local_depth;
+   
 
     // 1 : 0 -> 0 , 256 -> 0
     // 2 : 0 -> 0, 128 -> 0, 256->256 , 384->256
     // printf("bucket idx %u interval : %u\n",bucket_idx,interval);
     if (bucket_idx != (bucket_idx >> interval) << interval) {
       //( buddy idx ||interval|| bucket idx-empty )
+      
       buddy_idx = bucket_idx - (1UL << (interval - 1));
       // printf("bucket idx %u buddy idx : %u\n",bucket_idx,buddy_idx);
-      if ((buddy_local_depth = htdp->GetLocalDepth(buddy_idx)) == local_depth) {
+      if (htdp->GetLocalDepth(buddy_idx) == local_depth) {
+
         htdp->DecrLocalDepth(buddy_idx);
         htdp->DecrLocalDepth(bucket_idx);
       }
     } else {
       // ( bucket idx-empty ||interval|| buddy idx)
       buddy_idx = bucket_idx + (1UL << (interval - 1));
-      buddy_local_depth = htdp->GetLocalDepth(buddy_idx);
-      if (buddy_local_depth == local_depth) {
+      if (htdp->GetLocalDepth(buddy_idx) == local_depth) {
         // copy buddy content to bucket content;
         page_id_t buddy_page_id = htdp->GetBucketPageId(buddy_idx);
         Page *buddy_page = buffer_pool_manager_->FetchPage(buddy_page_id);
@@ -289,9 +288,14 @@ auto HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key, const
       }
     }
 
-    if (htdp->CanShrink()) {
-      htdp->DecrGlobalDepth();
-    }
+    printf(" it is empty at %u , buddy : %u\n",bucket_idx,buddy_idx);
+    htdp->CanShrink();
+    // if (htdp->CanShrink()) {
+    //   // htdp->DecrGlobalDepth();
+    //   // printf("we can shrink!\n");
+    // } else{
+
+    // }
     table_latch_.WUnlock();
   }
   page->WUnlatch();

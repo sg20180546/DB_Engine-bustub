@@ -1,6 +1,6 @@
 # Structure Database Engine Toy Project : bustub
 
-## 1. Project 1 (clear at 3/7/2022)
+## 1. Project 1 : Buffer Pool Manager (clear at 3/7/2022)
 ### 1) LRU Replacer
 * Last Recently Used Algorithm by double linked list
 * Unpinned Pages' physical frame id is hang on list
@@ -18,7 +18,7 @@
 * Latch : Semaphore protecting SGA(Memory Resource, not block)
 * Small critical section makes parallelism higher
    
-## 2. Project 2 (clear at 18/7/2022)
+## 2. Project 2 : Hash Table (clear at 18/7/2022)
 ### 1) Hash table bucket page, Hash table directory page
 * Hash Table Directory manage 512 Hash table bucket page
 * 512 local_depths_=512 bytes , 512 bucket_page_ids=2048 bytes
@@ -54,6 +54,8 @@
 ### 3) Concurrency
 * Use Two Phase Lock(Latch) to prevent Deadlock
 
-
+## 3. Project 3 : Query Execution (progressing)
+* Sequential Scan
+* Insert
 
 ---------------------------------------------------

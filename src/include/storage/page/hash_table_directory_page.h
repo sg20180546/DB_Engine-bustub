@@ -126,7 +126,7 @@ class HashTableDirectoryPage {
   /**
    * @return true if the directory can be shrunk
    */
-  auto CanShrink() -> bool;
+  void CanShrink();
 
   /**
    * @return the current directory size
@@ -186,6 +186,13 @@ class HashTableDirectoryPage {
    */
   void PrintDirectory();
 
+  void PrintPageMap() {
+    for(int i=0;i<DIRECTORY_ARRAY_SIZE;i++) {
+      if(bucket_page_ids_[i]!=-1) {
+        std::cout<<i<< " : "<<bucket_page_ids_[i]<<" local depth "<<(int)local_depths_[i]<<"\n";
+      }
+    }
+  }
  private:
   page_id_t page_id_;
   lsn_t lsn_;

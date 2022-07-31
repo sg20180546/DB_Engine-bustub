@@ -40,14 +40,18 @@ void HashTableDirectoryPage::SetBucketPageId(uint32_t bucket_idx, page_id_t buck
 
 auto HashTableDirectoryPage::Size() -> uint32_t { return 0; }
 
-auto HashTableDirectoryPage::CanShrink() -> bool {
+void HashTableDirectoryPage::CanShrink()  {
+  printf("Global deepth : %u\n",global_depth_);
   uint32_t interval = 1UL << (9 - global_depth_);
   for (uint32_t i = 0; i < DIRECTORY_ARRAY_SIZE; i += interval) {
     if (GetLocalDepth(i) >= global_depth_) {
-      return false;
+      return;
     }
   }
-  return true;
+  printf("shrinking\n");
+  DecrGlobalDepth();
+  // return true;
+  CanShrink();
 }
 
 auto HashTableDirectoryPage::GetLocalDepth(uint32_t bucket_idx) -> uint32_t { return local_depths_[bucket_idx]; }
