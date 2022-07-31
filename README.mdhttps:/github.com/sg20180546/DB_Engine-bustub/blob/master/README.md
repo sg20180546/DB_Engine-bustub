@@ -11,8 +11,8 @@
    - If Victim, At the end of list is removed and return its value. O(1)
 ### 2) Buffer Pool Manager
 * Managing class Page in physical frame, which is VM Concept
-* Comparing BufferPoolManager::free_list_ to LRU list, free list is 'explicitly DELETED physical frame' list but LRU list store 'UNPINNED POTENTIALLY evicted physical frame' that is still hang on to physical frame
-* Physical frame and Page table declare as Page* page and std::unordered_map<page_id_t,frame_id_t> page_table
+* Comparing `BufferPoolManager::free_list_` to LRU list, free list is 'explicitly DELETED physical frame' list but LRU list store 'UNPINNED POTENTIALLY evicted physical frame' that is still hang on to physical frame
+* Physical frame and Page table declare as `Page* page` and `std::unordered_map<page_id_t,frame_id_t> page_table`
 ### 3) Parallel Buffer Pool Manager
 * By divide entire pool size by number of instance, rather than 1 instance manage whole pool
 * Latch : Semaphore protecting SGA(Memory Resource, not block)
