@@ -29,6 +29,7 @@ auto HASH_TABLE_BUCKET_TYPE::GetValue(KeyType key, KeyComparator cmp, std::vecto
     for (; i < scope; i++) {
       if (!cmp(key, array_[i].first)) {
         if (IsReadable(i)) {
+          // std::cout<<key<<","<<array_[i].second<<" is on offset(getvalue)"<<i<<"\n";
           result->push_back(array_[i].second);
         }
       }
@@ -37,6 +38,7 @@ auto HASH_TABLE_BUCKET_TYPE::GetValue(KeyType key, KeyComparator cmp, std::vecto
     scope += 8;
   }
   if (!result->empty()) {
+    
     ret = true;
   }
   return ret;
@@ -88,7 +90,8 @@ auto HASH_TABLE_BUCKET_TYPE::Remove(KeyType key, ValueType value, KeyComparator 
         if (array_[i].second == value) {
           // printf("value test %d ",i);
           if (IsReadable(i)) {
-            // printf("final pass \n");
+            // printf(" \n");
+            // std::cout<<key<<","<<value<<" is on offset(remove)"<<i<<"\n";
             UnSetReadable(i);
             return true;
             // ret=true;
@@ -104,7 +107,9 @@ auto HASH_TABLE_BUCKET_TYPE::Remove(KeyType key, ValueType value, KeyComparator 
     // printf("occ %d i: %d \n\n",*o,i);
   }
   // printf("readable %u ",(unsigned char)(*readable));
-
+  if(ret==false){
+    // printf("cannot find , i : %d\n\n",i);
+  }
   return ret;
 }
 

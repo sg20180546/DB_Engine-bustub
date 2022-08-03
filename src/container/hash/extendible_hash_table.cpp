@@ -88,19 +88,27 @@ auto HASH_TABLE_TYPE::GetValue(Transaction *transaction, const KeyType &key, std
 
   HashTableDirectoryPage *htdp = FetchDirectoryPage();
   uint32_t bucket_idx = GetBucketIdxByKey(htdp, key);
-
+  // IntComparator cmp;
+  std::cout<<"getvalue htdp rlatch\n";
   table_latch_.RLock();
   page_id_t page_id = htdp->GetBucketPageId(bucket_idx);
   // std::cout<<"find key "<<key<<" page_id "<<page_id<<"\n\n";
   Page *page = buffer_pool_manager_->FetchPage(page_id);
+  // if(!cmp((int)(key),3978)){
+    // std::cout<<key<<" Getvalue page id : "<<page_id<<"\n";
+  // }
+  std::cout<<"getvalue bucekt rlatch\n";
   page->RLatch();
   auto htb = reinterpret_cast<HASH_TABLE_BUCKET_TYPE *>(page->GetData());
   ret = htb->GetValue(key, comparator_, result);
-
+  std::cout<<"getvalue unlatch\n";
   page->RUnlatch();
+  std::cout<<"getvalue htdp unrlatch\n";
   table_latch_.RUnlock();
+  std::cout<<"reach ehear?\n";
   buffer_pool_manager_->UnpinPage(page_id, false, nullptr);
   buffer_pool_manager_->UnpinPage(directory_page_id_, false, nullptr);
+
   return ret;
   // return false;
 }
@@ -110,25 +118,24 @@ auto HASH_TABLE_TYPE::GetValue(Transaction *transaction, const KeyType &key, std
  *****************************************************************************/
 template <typename KeyType, typename ValueType, typename KeyComparator>
 auto HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const ValueType &value) -> bool {
-  // std::cout<<"inserting "<<key;
+
   bool ret;
   uint32_t bucket_idx;
   page_id_t page_id;
   HashTableDirectoryPage *htdp = FetchDirectoryPage();
 
-  table_latch_.RLock();
+  // table_latch_.WLock();
   bucket_idx = GetBucketIdxByKey(htdp, key);
   page_id = htdp->GetBucketPageId(bucket_idx);
-  // printf("  bucket idx %u page_id %u\n",bucket_idx,page_id);
-  table_latch_.RUnlock();
 
   Page *page = buffer_pool_manager_->FetchPage(page_id);
-  page->WLatch();
+  // page->WLatch();
+
   HASH_TABLE_BUCKET_TYPE *htb = reinterpret_cast<HASH_TABLE_BUCKET_TYPE *>(page->GetData());
-  // std::cout<<"key "<<key<<"and value "<<value<<" is insert at page id "<<page_id<<"\n";
+
   if (htb->IsFull()) {
-    // printf("is full\n\n\n");
-    table_latch_.WLock();
+    // printf("is full lock\n\n\n");
+
     uint32_t gd;
 
     if (htdp->GetLocalDepth(bucket_idx) == (gd = htdp->GetGlobalDepth())) {
@@ -155,11 +162,11 @@ auto HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const
     if ((new_page_id = htdp->GetBucketPageId(new_bucket_idx)) == -1) {
       new_page = buffer_pool_manager_->NewPage(&new_page_id);
       htdp->SetBucketPageId(new_bucket_idx, new_page_id);
-      printf("there is no cacheed page cur page id : %u new page id : %u",page_id,new_page_id);
-      std::cout<<"key : "<<key<<"\n";
+      // printf("there is no cacheed page cur page id : %u new page id : %u",page_id,new_page_id);
+      // std::cout<<"key : "<<key<<"\n";
     } else {
-      printf("there is already cached page : %u",new_page_id);
-      std::cout<<"key : "<<key<<"\n";
+      // printf("there is already cached page : %u",new_page_id);
+      // std::cout<<"key : "<<key<<"\n";
       new_page = buffer_pool_manager_->FetchPage(new_page_id);
     }
 
@@ -168,46 +175,46 @@ auto HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const
     // printf("insert lock point here 3\n");
     // // copy correct thing to new bucket
     uint64_t i = 0;
+    uint32_t tmp;
     // uint32_t gm= htdp->GetGlobalDepthMask();
     // printf("copying %ld , mask : %u\n",BUCKET_ARRAY_SIZE,gm);
-    int moved = 0;
-
+    // int moved = 0;
+    // std::cout<<"system error\n";
     while (i < BUCKET_ARRAY_SIZE && htb->IsOccupied(i)) {
       if (htb->IsReadable(i)) {
-        // printf("%4lu",i);
+
         KeyType key = htb->KeyAt(i);
-        uint32_t tmp = GetBucketIdxByKey(htdp, key);
-        // printf("new table %4u ",tmp);
+        tmp = GetBucketIdxByKey(htdp, key);
+
         if (tmp == new_bucket_idx) {
-          //  printf("%4lu",i);
-          // std::c
-          // std::cout<<tmp<<" gd "<<gd<<"\n";
-          moved++;
-          // std::cout<<key<<"("<<htb->ValueAt(i)<<") ";
           new_htb->Insert(key, htb->ValueAt(i), comparator_);
           htb->RemoveAt(i);
-        } else {
-          // std::cout<<tmp<<" gd "<<gd<<"\n";
         }
       }
       i++;
     }
-    // printf("\nmoved : %d ,new bucket idx %u new page id %u\n",moved,new_bucket_idx,new_page_id);
-    // printf("insert lock point here 4\n");
-    page->WUnlatch();
-    table_latch_.WUnlock();
-    buffer_pool_manager_->UnpinPage(directory_page_id_, true, nullptr);
-    buffer_pool_manager_->UnpinPage(page_id, false, nullptr);
-    buffer_pool_manager_->UnpinPage(new_page_id, true, nullptr);
-    ret = this->Insert(transaction, key, value);
+    tmp=GetBucketIdxByKey(htdp,key);
+    if(tmp==new_bucket_idx) {
+      ret=new_htb->Insert(key,value,comparator_);
+    } else {
+      ret=htb->Insert(key,value,comparator_);
+    }
+    // page->WLatch();
+    // table_latch_.WLock();
+    // buffer_pool_manager_->UnpinPage(directory_page_id_, true, nullptr);
+    // buffer_pool_manager_->UnpinPage(new_page_id, true, nullptr);
+    // return this->Insert(transaction, key, value);
 
   } else {
     ret = htb->Insert(key, value, comparator_);
-    page->WUnlatch();
-    buffer_pool_manager_->UnpinPage(page_id, false, nullptr);
-    buffer_pool_manager_->UnpinPage(directory_page_id_, false, nullptr);
   }
-
+  
+  // std::cout<<"unlatching?\n";
+  // page->WUnlatch();
+  // std::cout<<"unlocking?\n";
+  // table_latch_.WUnlock();
+  buffer_pool_manager_->UnpinPage(page_id, false, nullptr);
+  buffer_pool_manager_->UnpinPage(directory_page_id_, false, nullptr);
   return ret;
 }
 
@@ -237,22 +244,26 @@ auto HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key, const
   uint32_t local_depth;
   page_id_t page_id;
   Page *page;
-  table_latch_.RLock();
+  table_latch_.WLock();
   bucket_idx = GetBucketIdxByKey(htdp, key);
   page_id = htdp->GetBucketPageId(bucket_idx);
-  table_latch_.RUnlock();
+
 
   page = buffer_pool_manager_->FetchPage(page_id);
   page->WLatch();
+
   HASH_TABLE_BUCKET_TYPE *htb = reinterpret_cast<HASH_TABLE_BUCKET_TYPE *>(page->GetData());
   // std::cout<<"remove at "<<key<<" "<<value<<" page_id "<<page_id<<"\n";
   ret = htb->Remove(key, value, comparator_);
+  // if(ret==false) {
+  //   return ret;
+  // }
   // if(comparator_(key,0)) assert(ret);
   // global_depth = GetGlobalDepth();
   local_depth = htdp->GetLocalDepth(bucket_idx);
   if (local_depth != 0 && htb->IsEmpty()) {
     // printf("is empty at page id :%u , local depth %u, global depth %u\n",page_id,local_depth, global_depth);
-    table_latch_.WLock();
+
     uint32_t buddy_idx;
     uint32_t interval = 10 - local_depth;
    
@@ -277,27 +288,19 @@ auto HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key, const
         // copy buddy content to bucket content;
         page_id_t buddy_page_id = htdp->GetBucketPageId(buddy_idx);
         Page *buddy_page = buffer_pool_manager_->FetchPage(buddy_page_id);
-        buddy_page->RLatch();
+        buddy_page->WLatch();
         memmove(page->GetData(), buddy_page->GetData(), PAGE_SIZE);
         memset(buddy_page->GetData(), 0, PAGE_SIZE);
-        buddy_page->RUnlatch();
+        buddy_page->WUnlatch();
 
         htdp->DecrLocalDepth(bucket_idx);
         htdp->DecrLocalDepth(buddy_idx);
         buffer_pool_manager_->UnpinPage(buddy_page_id, true);
       }
     }
-
-    printf(" it is empty at %u , buddy : %u\n",bucket_idx,buddy_idx);
-    htdp->CanShrink();
-    // if (htdp->CanShrink()) {
-    //   // htdp->DecrGlobalDepth();
-    //   // printf("we can shrink!\n");
-    // } else{
-
-    // }
-    table_latch_.WUnlock();
+    htdp->CanShrink();    
   }
+  table_latch_.WUnlock();
   page->WUnlatch();
   buffer_pool_manager_->UnpinPage(page_id, true, nullptr);
   buffer_pool_manager_->UnpinPage(directory_page_id_, true, nullptr);

@@ -26,11 +26,11 @@ namespace bustub {
 // NOLINTNEXTLINE
 TEST(HashTableTest, SampleTest) {
   auto *disk_manager = new DiskManager("test.db");
-  auto *bpm = new BufferPoolManagerInstance(50, disk_manager);
+  auto *bpm = new BufferPoolManagerInstance(100, disk_manager);
   ExtendibleHashTable<int, int, IntComparator> ht("blah", bpm, IntComparator(), HashFunction<int>());
 
   // insert a few values
-  int testcase = 3500;
+  int testcase = 10000;
   for (int i = 0; i < testcase; i++) {
     ht.Insert(nullptr, i, i);
     std::vector<int> res;
@@ -73,6 +73,7 @@ TEST(HashTableTest, SampleTest) {
       } else {
         EXPECT_EQ(2 * i, res[0]);
         EXPECT_EQ(i, res[1]);
+        // ht.PrintPageMap();
         assert(i == res[1]);
       }
     }
@@ -83,8 +84,9 @@ TEST(HashTableTest, SampleTest) {
   // look for a key that does not exist
   // printf("point 0\n\n");
   std::vector<int> res;
-  ht.GetValue(nullptr, 249, &res);
+  ht.GetValue(nullptr, 3978, &res);
   EXPECT_EQ(2, res.size());
+  // exit(0);
   // std::cout<<"249 value "<<res[0]<<" "<<res[1]<<"\n\n";
   // delete some values
   for (int i = 0; i < testcase; i++) {
@@ -104,23 +106,30 @@ TEST(HashTableTest, SampleTest) {
   // delete all values
   {
     std::vector<int> res;
-    ht.GetValue(nullptr, 249, &res);
+    ht.GetValue(nullptr, 3978, &res);
     EXPECT_EQ(1, res.size());
+    // EXPECT_TRUE(ht.Remove(nullptr,3977,3977*2));
   }
-  for (int i = 0; i < testcase; i++) {
+  // exit(0);
+  for (int i = testcase-1; i >=0; i--) {
     if (i == 0) {
       // (0, 0) has been deleted
       EXPECT_FALSE(ht.Remove(nullptr, i, 2 * i));
     } else {
-      EXPECT_TRUE(ht.Remove(nullptr, i, 2 * i)) << "Falied at " << i << std::endl;
+      bool ret=ht.Remove(nullptr, i, 2 * i);
+      EXPECT_TRUE(ret) << "Falied at " << i << std::endl;
+      if(ret==false) {
+        ht.PrintPageMap();
+        exit(0);
+      }
     }
     std::vector<int> res;
     ht.GetValue(nullptr,i,&res);
     EXPECT_EQ(0,res.size());
   }
+  // exit(0);
 
-
-  EXPECT_EQ(ht.GetGlobalDepth(),0);
+  // EXPECT_EQ(ht.GetGlobalDepth(),0);
   // assert(ht.GetGlobalDepth()==0);
   ht.PrintPageMap();
   std::cout<<"check page_id by reiterate above job \n";
@@ -150,7 +159,7 @@ TEST(HashTableTest, SampleTest) {
       // duplicate values for the same key are not allowed
       EXPECT_FALSE(ht.Insert(nullptr, i, 2 * i));
     } else {
-      EXPECT_TRUE(ht.Insert(nullptr, i, 2 * i));
+      EXPECT_TRUE(ht.Insert(nullptr, i, 2 * i)) << "Failed at "<<i<<std::endl;
     }
     // ht.Insert(nullptr, i, 2 * i);
     std::vector<int> res;
@@ -194,7 +203,7 @@ TEST(HashTableTest, SampleTest) {
     ht.GetValue(nullptr, 249, &res);
     EXPECT_EQ(1, res.size());
   }
-  for (int i = 0; i < testcase; i++) {
+  for (int i = testcase-1; i >=0; i--) {
     if (i == 0) {
       // (0, 0) has been deleted
       EXPECT_FALSE(ht.Remove(nullptr, i, 2 * i));

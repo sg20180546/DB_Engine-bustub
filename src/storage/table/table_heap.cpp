@@ -121,6 +121,9 @@ auto TableHeap::UpdateTuple(const Tuple &tuple, const RID &rid, Transaction *txn
   Tuple old_tuple;
   page->WLatch();
   bool is_updated = page->UpdateTuple(tuple, &old_tuple, rid, txn, lock_manager_, log_manager_);
+  if(!is_updated) {
+    // std::cout<<"TableHeap::UpdateTuple not updated\n";
+  }
   page->WUnlatch();
   buffer_pool_manager_->UnpinPage(page->GetTablePageId(), is_updated);
   // Update the transaction's write set.
@@ -154,7 +157,9 @@ void TableHeap::RollbackDelete(const RID &rid, Transaction *txn) {
 }
 
 auto TableHeap::GetTuple(const RID &rid, Tuple *tuple, Transaction *txn) -> bool {
+  // std::cout<<"gettuple "<<rid.GetPageId()<<"\n";
   // Find the page which contains the tuple.
+  // bug point
   auto page = static_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
   // If the page could not be found, then abort the transaction.
   if (page == nullptr) {

@@ -44,7 +44,7 @@ void BPLUSTREE_INDEX_TYPE::ScanKey(const Tuple &key, std::vector<RID> *result, T
   // construct scan index key
   KeyType index_key;
   index_key.SetFromKey(key);
-
+  std::cout<<"scan key : "<<index_key<<"\n";
   container_.GetValue(index_key, result, transaction);
 }
 

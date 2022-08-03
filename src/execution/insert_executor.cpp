@@ -23,16 +23,22 @@ InsertExecutor::InsertExecutor(ExecutorContext *exec_ctx, const InsertPlanNode *
 void InsertExecutor::Init() {
     
     table_info_=exec_ctx_->GetCatalog()->GetTable(plan_->TableOid());
+    index_infos_=exec_ctx_->GetCatalog()->GetTableIndexes(table_info_->name_);
+    
     [[maybe_unused]] RID rid;
 
     if(plan_->IsRawInsert()) {
-        
+
         assert(child_executor_.get()==nullptr);
         size_t insert_size=plan_->RawValues().size();
         for(size_t i=0;i<insert_size;i++) {
             Tuple tp(plan_->RawValuesAt(i),&table_info_->schema_);
             
             table_info_->table_->InsertTuple(tp,&rid,exec_ctx_->GetTransaction());
+            for(auto index_info: index_infos_ ) {
+                index_info->index_->InsertEntry(tp.KeyFromTuple(table_info_->schema_,index_info->key_schema_,
+                                                                index_info->index_->GetKeyAttrs()),rid,exec_ctx_->GetTransaction());
+            } 
         }
     } else {
         assert(child_executor_.get()!=nullptr);
@@ -48,6 +54,10 @@ void InsertExecutor::Init() {
 
         for(auto tp : child_result_set) {
             table_info_->table_->InsertTuple(tp,&rid,exec_ctx_->GetTransaction());
+            for(auto index_info: index_infos_ ) {
+                index_info->index_->InsertEntry(tp.KeyFromTuple(index_info->key_schema_,
+                                                table_info_->schema_,index_info->index_->GetKeyAttrs()),rid,exec_ctx_->GetTransaction());
+            }     
         }
     }
 }

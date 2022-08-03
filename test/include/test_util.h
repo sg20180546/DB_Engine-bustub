@@ -52,7 +52,7 @@ auto ParseCreateStatement(const std::string &sql_base) -> std::unique_ptr<Schema
     n = t.find_first_of(' ');
     column_name = t.substr(0, n);
     column_type = t.substr(n + 1);
-
+    // std::cout<<"column name : "<<column_name<<"\n";
     // Deal with varchar(size) situation
     n = column_type.find_first_of('(');
     if (n != std::string::npos) {

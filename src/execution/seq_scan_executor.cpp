@@ -18,7 +18,6 @@ SeqScanExecutor::SeqScanExecutor(ExecutorContext *exec_ctx, const SeqScanPlanNod
                                 : AbstractExecutor(exec_ctx), plan_(plan), iterator_(nullptr,RID(),nullptr) {}
 
 void SeqScanExecutor::Init() {
-    // std::cout<<"seqscanexec init\n";
     uint32_t column_idx;
     std::string column_name;
     uint32_t column_count=plan_->OutputSchema()->GetColumnCount();    
@@ -49,7 +48,7 @@ auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
             Tuple tp= iterator_->KeyFromTuple(table_info_->schema_,*key_schema,key_attrs_);
             if(predicate->Evaluate(&tp,&schema).GetAs<bool>()) {
                 *tuple=tp;
-                *rid=tp.GetRid();
+                *rid=iterator_->GetRid();
                 iterator_++;
                 return true;
             }
@@ -58,8 +57,8 @@ auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
         return false;
     } else {
         Tuple tp=iterator_->KeyFromTuple(table_info_->schema_,*key_schema,key_attrs_);
+        *rid=iterator_->GetRid();
         *tuple=tp;
-        *rid=tp.GetRid();
         iterator_++;
         return true;
     }

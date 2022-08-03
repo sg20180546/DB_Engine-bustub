@@ -206,7 +206,7 @@ TEST_F(ExecutorTest, SimpleSelectInsertTest) {
 }
 
 // INSERT INTO empty_table2 VALUES (100, 10), (101, 11), (102, 12)
-TEST_F(ExecutorTest, DISABLED_SimpleRawInsertWithIndexTest) {
+TEST_F(ExecutorTest, SimpleRawInsertWithIndexTest) {
   // Create Values to insert
   std::vector<Value> val1{ValueFactory::GetIntegerValue(100), ValueFactory::GetIntegerValue(10)};
   std::vector<Value> val2{ValueFactory::GetIntegerValue(101), ValueFactory::GetIntegerValue(11)};
@@ -222,6 +222,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleRawInsertWithIndexTest) {
   auto *index_info = GetExecutorContext()->GetCatalog()->CreateIndex<KeyType, ValueType, ComparatorType>(
       GetTxn(), "index1", "empty_table2", table_info->schema_, *key_schema, {0}, 8, HashFunctionType{});
 
+
   // Execute the insert
   GetExecutionEngine()->Execute(&insert_plan, nullptr, GetTxn(), GetExecutorContext());
 
@@ -235,6 +236,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleRawInsertWithIndexTest) {
   SeqScanPlanNode scan_plan{out_schema, nullptr, table_info->oid_};
 
   std::vector<Tuple> result_set{};
+
   GetExecutionEngine()->Execute(&scan_plan, &result_set, GetTxn(), GetExecutorContext());
 
   // First value
@@ -248,7 +250,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleRawInsertWithIndexTest) {
   // Third value
   ASSERT_EQ(result_set[2].GetValue(out_schema, out_schema->GetColIdx("colA")).GetAs<int32_t>(), 102);
   ASSERT_EQ(result_set[2].GetValue(out_schema, out_schema->GetColIdx("colB")).GetAs<int32_t>(), 12);
-
+  
   // Size
   ASSERT_EQ(result_set.size(), 3);
   std::vector<RID> rids{};
@@ -262,6 +264,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleRawInsertWithIndexTest) {
     index_info->index_->ScanKey(index_key, &rids, GetTxn());
 
     Tuple indexed_tuple{};
+
     ASSERT_TRUE(table_info->table_->GetTuple(rids[0], &indexed_tuple, GetTxn()));
     ASSERT_EQ(indexed_tuple.GetValue(out_schema, out_schema->GetColIdx("colA")).GetAs<int32_t>(),
               table_tuple.GetValue(out_schema, out_schema->GetColIdx("colA")).GetAs<int32_t>());
@@ -271,7 +274,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleRawInsertWithIndexTest) {
 }
 
 // UPDATE test_3 SET colB = colB + 1;
-TEST_F(ExecutorTest, DISABLED_SimpleUpdateTest) {
+TEST_F(ExecutorTest, SimpleUpdateTest) {
   // Construct a sequential scan of the table
   const Schema *out_schema{};
   std::unique_ptr<AbstractPlanNode> scan_plan{};
@@ -324,13 +327,13 @@ TEST_F(ExecutorTest, DISABLED_SimpleUpdateTest) {
 
   for (auto i = 0UL; i < result_set.size(); ++i) {
     auto &tuple = result_set[i];
-    ASSERT_EQ(tuple.GetValue(out_schema, out_schema->GetColIdx("colA")).GetAs<int32_t>(), static_cast<int32_t>(i));
-    ASSERT_EQ(tuple.GetValue(out_schema, out_schema->GetColIdx("colB")).GetAs<int32_t>(), static_cast<int32_t>(i + 1));
+    EXPECT_EQ(tuple.GetValue(out_schema, out_schema->GetColIdx("colA")).GetAs<int32_t>(), static_cast<int32_t>(i));
+    EXPECT_EQ(tuple.GetValue(out_schema, out_schema->GetColIdx("colB")).GetAs<int32_t>(), static_cast<int32_t>(i + 1));
   }
 }
 
 // DELETE FROM test_1 WHERE col_a == 50;
-TEST_F(ExecutorTest, DISABLED_SimpleDeleteTest) {
+TEST_F(ExecutorTest, SimpleDeleteTest) {
   // Construct query plan
   auto table_info = GetExecutorContext()->GetCatalog()->GetTable("test_1");
   auto &schema = table_info->schema_;
@@ -343,13 +346,14 @@ TEST_F(ExecutorTest, DISABLED_SimpleDeleteTest) {
   // Create the index
   auto key_schema = ParseCreateStatement("a bigint");
   ComparatorType comparator{key_schema.get()};
+
   auto *index_info = GetExecutorContext()->GetCatalog()->CreateIndex<KeyType, ValueType, ComparatorType>(
       GetTxn(), "index1", "test_1", GetExecutorContext()->GetCatalog()->GetTable("test_1")->schema_, *key_schema, {0},
       8, HashFunctionType{});
 
   std::vector<Tuple> result_set;
   GetExecutionEngine()->Execute(scan_plan1.get(), &result_set, GetTxn(), GetExecutorContext());
-
+  std::cout<<"hello\n";
   // Verify
   ASSERT_EQ(result_set.size(), 1);
   for (const auto &tuple : result_set) {
@@ -366,11 +370,12 @@ TEST_F(ExecutorTest, DISABLED_SimpleDeleteTest) {
 
   // SELECT col_a FROM test_1 WHERE col_a == 50
   GetExecutionEngine()->Execute(scan_plan1.get(), &result_set, GetTxn(), GetExecutorContext());
-  ASSERT_TRUE(result_set.empty());
+  EXPECT_TRUE(result_set.empty());
 
   // Ensure the key was removed from the index
   std::vector<RID> rids{};
   index_info->index_->ScanKey(index_key, &rids, GetTxn());
+  std::cout<<"1\n";
   ASSERT_TRUE(rids.empty());
 }
 

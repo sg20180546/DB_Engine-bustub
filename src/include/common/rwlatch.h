@@ -52,7 +52,9 @@ class ReaderWriterLatch {
    * Release a write latch.
    */
   void WUnlock() {
+    // std::cout<<"0\n";
     std::lock_guard<mutex_t> guard(mutex_);
+    // std::cout<<"1\n";
     writer_entered_ = false;
     reader_.notify_all();
   }

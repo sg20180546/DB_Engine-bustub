@@ -137,6 +137,7 @@ auto TablePage::UpdateTuple(const Tuple &new_tuple, Tuple *old_tuple, const RID 
     if (enable_logging) {
       txn->SetState(TransactionState::ABORTED);
     }
+    // std::cout<<"slot num : "<<slot_num<<"gettuplecount"<<GetTupleCount()<<"\n";
     return false;
   }
   uint32_t tuple_size = GetTupleSize(slot_num);
@@ -145,10 +146,12 @@ auto TablePage::UpdateTuple(const Tuple &new_tuple, Tuple *old_tuple, const RID 
     if (enable_logging) {
       txn->SetState(TransactionState::ABORTED);
     }
+    std::cout<<"1\n";
     return false;
   }
   // If there is not enuogh space to update, we need to update via delete followed by an insert (not enough space).
   if (GetFreeSpaceRemaining() + tuple_size < new_tuple.size_) {
+      std::cout<<"2\n";
     return false;
   }
 
@@ -167,9 +170,11 @@ auto TablePage::UpdateTuple(const Tuple &new_tuple, Tuple *old_tuple, const RID 
     // Acquire an exclusive lock, upgrading from shared if necessary.
     if (txn->IsSharedLocked(rid)) {
       if (!lock_manager->LockUpgrade(txn, rid)) {
+        std::cout<<"3\n";
         return false;
       }
     } else if (!txn->IsExclusiveLocked(rid) && !lock_manager->LockExclusive(txn, rid)) {
+      std::cout<<"4\n";
       return false;
     }
     LogRecord log_record(txn->GetTransactionId(), txn->GetPrevLSN(), LogRecordType::UPDATE, rid, *old_tuple, new_tuple);
@@ -200,6 +205,7 @@ auto TablePage::UpdateTuple(const Tuple &new_tuple, Tuple *old_tuple, const RID 
 
 void TablePage::ApplyDelete(const RID &rid, Transaction *txn, LogManager *log_manager) {
   uint32_t slot_num = rid.GetSlotNum();
+  std::cout<<slot_num<<" "<<GetTupleCount()<<"\n";
   BUSTUB_ASSERT(slot_num < GetTupleCount(), "Cannot have more slots than tuples.");
 
   uint32_t tuple_offset = GetTupleOffsetAtSlot(slot_num);
