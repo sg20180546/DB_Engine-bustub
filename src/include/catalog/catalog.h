@@ -193,7 +193,7 @@ class Catalog {
                    const Schema &key_schema, const std::vector<uint32_t> &key_attrs, std::size_t keysize,
                    HashFunction<KeyType> hash_function) -> IndexInfo * {
     // Reject the creation request for nonexistent table
-    std::cout<<"createindex\n";
+
     if (table_names_.find(table_name) == table_names_.end()) {
       return NULL_INDEX_INFO;
     }
@@ -219,12 +219,14 @@ class Catalog {
                                                                                                hash_function);
 
     // Populate the index with all tuples in table heap
-    // int i=0;
+    // [[maybe_unused]] int i=0;
     auto *table_meta = GetTable(table_name);
     auto *heap = table_meta->table_.get();
     for (auto tuple = heap->Begin(txn); tuple != heap->End(); ++tuple) {
       index->InsertEntry(tuple->KeyFromTuple(schema, key_schema, key_attrs), tuple->GetRid(), txn);
+
     }
+    // std::cout<<"keysize"<<sizeof(KeyType)<<" "<<"valuesize"<<sizeof(ValueType)<<"\n";
     // Get the next OID for the new index
     const auto index_oid = next_index_oid_.fetch_add(1);
 

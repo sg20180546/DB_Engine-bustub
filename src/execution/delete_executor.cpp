@@ -41,14 +41,15 @@ void DeleteExecutor::Init() {
         }
 
         size=child_rid_result_set.size();
-        std::cout<<"size : "<<size<<"\n";
+        // std::cout<<"size : "<<size<<"\n";
         for(size_t i = 0 ; i<size ; i++) {
-            std::cout<<child_rid_result_set[i].ToString();
+            // std::cout<<child_rid_result_set[i].ToString();
             table_info_->table_->ApplyDelete(child_rid_result_set[i],txn_);
             for(auto index_info : index_infos_) {
                 index_info->index_->DeleteEntry(child_tp_result_set[i],child_rid_result_set[i],txn_);
             }
         }
+
     }
 }
 

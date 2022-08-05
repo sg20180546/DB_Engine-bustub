@@ -89,23 +89,20 @@ auto HASH_TABLE_TYPE::GetValue(Transaction *transaction, const KeyType &key, std
   HashTableDirectoryPage *htdp = FetchDirectoryPage();
   uint32_t bucket_idx = GetBucketIdxByKey(htdp, key);
   // IntComparator cmp;
-  std::cout<<"getvalue htdp rlatch\n";
+  // std::cout<<"getvalue htdp rlatch\n";
   table_latch_.RLock();
   page_id_t page_id = htdp->GetBucketPageId(bucket_idx);
   // std::cout<<"find key "<<key<<" page_id "<<page_id<<"\n\n";
   Page *page = buffer_pool_manager_->FetchPage(page_id);
-  // if(!cmp((int)(key),3978)){
-    // std::cout<<key<<" Getvalue page id : "<<page_id<<"\n";
-  // }
-  std::cout<<"getvalue bucekt rlatch\n";
+  
   page->RLatch();
   auto htb = reinterpret_cast<HASH_TABLE_BUCKET_TYPE *>(page->GetData());
   ret = htb->GetValue(key, comparator_, result);
-  std::cout<<"getvalue unlatch\n";
+  // std::cout<<"getvalue unlatch\n";
   page->RUnlatch();
-  std::cout<<"getvalue htdp unrlatch\n";
+  // std::cout<<"getvalue htdp unrlatch\n";
   table_latch_.RUnlock();
-  std::cout<<"reach ehear?\n";
+  // std::cout<<"reach ehear?\n";
   buffer_pool_manager_->UnpinPage(page_id, false, nullptr);
   buffer_pool_manager_->UnpinPage(directory_page_id_, false, nullptr);
 
@@ -180,6 +177,7 @@ auto HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const
     // printf("copying %ld , mask : %u\n",BUCKET_ARRAY_SIZE,gm);
     // int moved = 0;
     // std::cout<<"system error\n";
+    
     while (i < BUCKET_ARRAY_SIZE && htb->IsOccupied(i)) {
       if (htb->IsReadable(i)) {
 

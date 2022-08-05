@@ -78,7 +78,7 @@ TEST(HashTableTest, SampleTest) {
       }
     }
   }
-  ht.PrintPageMap();
+  // ht.PrintPageMap();
   ht.VerifyIntegrity();
 
   // look for a key that does not exist
@@ -119,7 +119,7 @@ TEST(HashTableTest, SampleTest) {
       bool ret=ht.Remove(nullptr, i, 2 * i);
       EXPECT_TRUE(ret) << "Falied at " << i << std::endl;
       if(ret==false) {
-        ht.PrintPageMap();
+        // ht.PrintPageMap();
         exit(0);
       }
     }
@@ -131,8 +131,8 @@ TEST(HashTableTest, SampleTest) {
 
   // EXPECT_EQ(ht.GetGlobalDepth(),0);
   // assert(ht.GetGlobalDepth()==0);
-  ht.PrintPageMap();
-  std::cout<<"check page_id by reiterate above job \n";
+  // ht.PrintPageMap();
+  // std::cout<<"check page_id by reiterate above job \n";
 
   ht.VerifyIntegrity();
   for (int i = 0; i < testcase; i++) {

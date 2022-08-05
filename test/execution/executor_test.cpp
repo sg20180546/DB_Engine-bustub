@@ -353,7 +353,7 @@ TEST_F(ExecutorTest, SimpleDeleteTest) {
 
   std::vector<Tuple> result_set;
   GetExecutionEngine()->Execute(scan_plan1.get(), &result_set, GetTxn(), GetExecutorContext());
-  std::cout<<"hello\n";
+
   // Verify
   ASSERT_EQ(result_set.size(), 1);
   for (const auto &tuple : result_set) {
@@ -365,17 +365,15 @@ TEST_F(ExecutorTest, SimpleDeleteTest) {
   std::unique_ptr<AbstractPlanNode> delete_plan;
   { delete_plan = std::make_unique<DeletePlanNode>(scan_plan1.get(), table_info->oid_); }
   GetExecutionEngine()->Execute(delete_plan.get(), nullptr, GetTxn(), GetExecutorContext());
-
   result_set.clear();
 
   // SELECT col_a FROM test_1 WHERE col_a == 50
   GetExecutionEngine()->Execute(scan_plan1.get(), &result_set, GetTxn(), GetExecutorContext());
   EXPECT_TRUE(result_set.empty());
-
   // Ensure the key was removed from the index
   std::vector<RID> rids{};
   index_info->index_->ScanKey(index_key, &rids, GetTxn());
-  std::cout<<"1\n";
+
   ASSERT_TRUE(rids.empty());
 }
 

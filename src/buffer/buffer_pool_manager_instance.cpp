@@ -202,8 +202,8 @@ auto BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty) -> 
 
 auto BufferPoolManagerInstance::AllocatePage() -> page_id_t {
   // next_page_id_latch_.lock();
-  const page_id_t next_page_id = next_page_id_;
-  next_page_id_ += num_instances_;
+  const page_id_t next_page_id = next_page_id_.fetch_add(num_instances_,std::memory_order_relaxed);
+  // next_page_id_ += num_instances_;
   // next_page_id_latch_.unlock();
   ValidatePageId(next_page_id);
   return next_page_id;

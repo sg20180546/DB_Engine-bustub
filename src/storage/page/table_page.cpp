@@ -205,7 +205,6 @@ auto TablePage::UpdateTuple(const Tuple &new_tuple, Tuple *old_tuple, const RID 
 
 void TablePage::ApplyDelete(const RID &rid, Transaction *txn, LogManager *log_manager) {
   uint32_t slot_num = rid.GetSlotNum();
-  std::cout<<slot_num<<" "<<GetTupleCount()<<"\n";
   BUSTUB_ASSERT(slot_num < GetTupleCount(), "Cannot have more slots than tuples.");
 
   uint32_t tuple_offset = GetTupleOffsetAtSlot(slot_num);
