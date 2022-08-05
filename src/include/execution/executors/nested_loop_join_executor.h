@@ -19,6 +19,7 @@
 #include "execution/executors/abstract_executor.h"
 #include "execution/plans/nested_loop_join_plan.h"
 #include "storage/table/tuple.h"
+#include "execution/expressions/column_value_expression.h"
 
 namespace bustub {
 
@@ -55,6 +56,23 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
  private:
   /** The NestedLoopJoin plan node to be executed. */
   const NestedLoopJoinPlanNode *plan_;
+  std::unique_ptr<AbstractExecutor> left_executor_;
+  std::unique_ptr<AbstractExecutor> right_executor_;
+  // std::vector<Tuple> left_result_;
+  // std::vector<Tuple> right_result;
+  const Schema* left_schema_;
+  const Schema* right_schema_;
+  const Schema* key_schema_;
+  const AbstractExpression*  predicate_;
+  // size_t ls;
+  // size_t rs;
+  // size_t i{0};
+  // size_t j{0};
+
+  Tuple l_tp;
+  Tuple r_tp;
+  RID l_rid;
+  RID r_rid;
 };
 
 }  // namespace bustub

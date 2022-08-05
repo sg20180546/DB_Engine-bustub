@@ -378,7 +378,7 @@ TEST_F(ExecutorTest, SimpleDeleteTest) {
 }
 
 // SELECT test_1.col_a, test_1.col_b, test_2.col1, test_2.col3 FROM test_1 JOIN test_2 ON test_1.col_a = test_2.col1;
-TEST_F(ExecutorTest, DISABLED_SimpleNestedLoopJoinTest) {
+TEST_F(ExecutorTest, SimpleNestedLoopJoinTest) {
   const Schema *out_schema1;
   std::unique_ptr<AbstractPlanNode> scan_plan1;
   {
@@ -400,7 +400,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleNestedLoopJoinTest) {
     out_schema2 = MakeOutputSchema({{"col1", col1}, {"col3", col3}});
     scan_plan2 = std::make_unique<SeqScanPlanNode>(out_schema2, nullptr, table_info->oid_);
   }
-
+  // exit(0);
   const Schema *out_final;
   std::unique_ptr<NestedLoopJoinPlanNode> join_plan;
   {

@@ -18,12 +18,14 @@ SeqScanExecutor::SeqScanExecutor(ExecutorContext *exec_ctx, const SeqScanPlanNod
                                 : AbstractExecutor(exec_ctx), plan_(plan), iterator_(nullptr,RID(),nullptr) {}
 
 void SeqScanExecutor::Init() {
+    key_attrs_.clear();
+    
     uint32_t column_idx;
     std::string column_name;
     uint32_t column_count=plan_->OutputSchema()->GetColumnCount();    
     table_info_=exec_ctx_->GetCatalog()->GetTable(plan_->GetTableOid());
     iterator_=table_info_->table_.get()->Begin(exec_ctx_->GetTransaction());
-
+  
     for(uint32_t i=0;i<column_count;i++){
         column_name.assign(plan_->OutputSchema()->GetColumn(i).GetName());
         column_idx=table_info_->schema_.GetColIdx(column_name);
