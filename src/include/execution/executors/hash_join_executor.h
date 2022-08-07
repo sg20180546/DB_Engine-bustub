@@ -19,6 +19,9 @@
 #include "execution/executors/abstract_executor.h"
 #include "execution/plans/hash_join_plan.h"
 #include "storage/table/tuple.h"
+#include "container/hash/extendible_hash_table.h"
+#include "execution/expressions/column_value_expression.h"
+#include "common/util/hash_util.h"
 
 namespace bustub {
 
@@ -51,9 +54,25 @@ class HashJoinExecutor : public AbstractExecutor {
   /** @return The output schema for the join */
   auto GetOutputSchema() -> const Schema * override { return plan_->OutputSchema(); };
 
+  auto MergeTuple(Tuple& left,Tuple& right)->Tuple;
  private:
-  /** The NestedLoopJoin plan node to be executed. */
+
   const HashJoinPlanNode *plan_;
+  std::unique_ptr<AbstractExecutor> left_executor_;
+  std::unique_ptr<AbstractExecutor> right_executor_;
+  const ColumnValueExpression* left_join_column_expr_;
+  const ColumnValueExpression* right_join_column_expr_;
+  const Schema* left_schema_;
+  const Schema* right_schema_;
+  const Schema* key_schema_;
+
+
+  std::unordered_map<hash_t,std::pair<RID,Tuple>> hash_map_;
+  std::vector<std::pair<RID,Tuple>> result_;
+  // Tuple last_r_tp_;
+  HashUtil hash_util_;
+  // HashUtil::h
+  // HASH_TABLE_TYPE* hash_table_;
 };
 
 }  // namespace bustub

@@ -54,12 +54,18 @@
       - If Empty Bucket remains after merged to Buddy Bucket, Copy All Contents of Buddy Bucket to Empty Bucket  : `Empty  ||interval|| Buddy`
       - If Buddy Bucket remains after merged to Empty Bucket : ` Buddy ||interval|| Empty`
       - Decrease local depth of Buddy/Empty Buckets
-      - Check CanShrink() to decrease global depth
+      - Check CanShrink() to decrease global depth, which is recursive function
 ### 3) Concurrency
 * Use Two Phase Lock(Latch) to prevent Deadlock
 
 ## 3. Project 3 : Query Execution (progressing)
 * Sequential Scan
+   - implementation defect : No considiration about sub query ( e.g. SELECT * from (SELECT * FROM table1) )
 * Insert
+* Delete
+* Naive(stupid) block join
+* Hash Join
+   - `std::unordered_map<hash_t,std::pair<RID,Tuple>>` : unordered map is implemented with Hash Table
+   - implementation defect : If there are OVERLAPPED join keys(value) in left table , it would malfunctioned . 
 
 ---------------------------------------------------
