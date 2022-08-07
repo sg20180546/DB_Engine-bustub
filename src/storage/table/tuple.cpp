@@ -22,7 +22,7 @@ namespace bustub {
 
 // TODO(Amadou): It does not look like nulls are supported. Add a null bitmap?
 Tuple::Tuple(std::vector<Value> values, const Schema *schema) : allocated_(true) {
-  // std::cout<<values.size()<<" "<<schema->GetColumnCount()<<"\n";
+  std::cout<<values.size()<<" "<<schema->GetColumnCount()<<"\n";
   assert(values.size() == schema->GetColumnCount());
 
   // 1. Calculate the size of the tuple.
@@ -39,7 +39,7 @@ Tuple::Tuple(std::vector<Value> values, const Schema *schema) : allocated_(true)
   // 3. Serialize each attribute based on the input value.
   uint32_t column_count = schema->GetColumnCount();
   uint32_t offset = schema->GetLength();
-
+  // std::cout<<"1\n";
   for (uint32_t i = 0; i < column_count; i++) {
     const auto &col = schema->GetColumn(i);
     if (!col.IsInlined()) {
@@ -49,7 +49,12 @@ Tuple::Tuple(std::vector<Value> values, const Schema *schema) : allocated_(true)
       values[i].SerializeTo(data_ + offset);
       offset += (values[i].GetLength() + sizeof(uint32_t));
     } else {
-      values[i].SerializeTo(data_ + col.GetOffset());
+      // std::cout<<"3\n";
+      assert(data_!= nullptr);
+      col.IsInlined(); // <- bug point
+      // std::cout<<"4";
+      values[i].SerializeTo(data_ + col.GetOffset()); // bug point
+      // std::cout<<"4\n";
     }
   }
 }

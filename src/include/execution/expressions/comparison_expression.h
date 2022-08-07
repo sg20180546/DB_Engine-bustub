@@ -49,6 +49,7 @@ class ComparisonExpression : public AbstractExpression {
 
   auto EvaluateAggregate(const std::vector<Value> &group_bys, const std::vector<Value> &aggregates) const
       -> Value override {
+        std::cout<<"comparexpr eval agg\n";
     Value lhs = GetChildAt(0)->EvaluateAggregate(group_bys, aggregates);
     Value rhs = GetChildAt(1)->EvaluateAggregate(group_bys, aggregates);
     return ValueFactory::GetBooleanValue(PerformComparison(lhs, rhs));

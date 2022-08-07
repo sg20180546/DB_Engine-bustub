@@ -25,7 +25,7 @@
 #include "execution/plans/aggregation_plan.h"
 #include "storage/table/tuple.h"
 #include "type/value_factory.h"
-
+#include "execution/expressions/aggregate_value_expression.h"
 namespace bustub {
 
 /**
@@ -43,7 +43,7 @@ class SimpleAggregationHashTable {
       : agg_exprs_{agg_exprs}, agg_types_{agg_types} {}
 
   /** @return The initial aggregrate value for this aggregation executor */
-  auto GenerateInitialAggregateValue() -> AggregateValue {
+  auto GenerateInitialAggregateValue(RID rid) -> AggregateValue {
     std::vector<Value> values{};
     for (const auto &agg_type : agg_types_) {
       switch (agg_type) {
@@ -65,7 +65,7 @@ class SimpleAggregationHashTable {
           break;
       }
     }
-    return {values};
+    return {values,rid};
   }
 
   /**
@@ -103,7 +103,7 @@ class SimpleAggregationHashTable {
    */
   void InsertCombine(const AggregateKey &agg_key, const AggregateValue &agg_val) {
     if (ht_.count(agg_key) == 0) {
-      ht_.insert({agg_key, GenerateInitialAggregateValue()});
+      ht_.insert({agg_key, GenerateInitialAggregateValue(agg_val.rid)});
     }
     CombineAggregateValues(&ht_[agg_key], agg_val);
   }
@@ -121,11 +121,17 @@ class SimpleAggregationHashTable {
     auto Val() -> const AggregateValue & { return iter_->second; }
 
     /** @return The iterator before it is incremented */
-    auto operator++() -> Iterator & {
-      ++iter_;
-      return *this;
-    }
+    // auto operator++() -> Iterator & {
+    //   ++iter_;
+    //   return *this;
+    // }
 
+    // void operator++() {
+    //   ++iter_;
+    // }
+    void Next(){
+      ++iter_;
+    }
     /** @return `true` if both iterators are identical */
     auto operator==(const Iterator &other) -> bool { return this->iter_ == other.iter_; }
 
@@ -195,12 +201,12 @@ class AggregationExecutor : public AbstractExecutor {
   }
 
   /** @return The tuple as an AggregateValue */
-  auto MakeAggregateValue(const Tuple *tuple) -> AggregateValue {
+  auto MakeAggregateValue(const Tuple *tuple,RID r) -> AggregateValue {
     std::vector<Value> vals;
     for (const auto &expr : plan_->GetAggregates()) {
       vals.emplace_back(expr->Evaluate(tuple, child_->GetOutputSchema()));
     }
-    return {vals};
+    return {vals,r};
   }
 
  private:
@@ -212,5 +218,9 @@ class AggregationExecutor : public AbstractExecutor {
   // TODO(Student): Uncomment SimpleAggregationHashTable aht_;
   /** Simple aggregation hash table iterator */
   // TODO(Student): Uncomment SimpleAggregationHashTable::Iterator aht_iterator_;
+  SimpleAggregationHashTable agg_hash_table_;
+  SimpleAggregationHashTable::Iterator iterator_;
+  const AbstractExpression* having;
+  const Schema* key_schema_;
 };
 }  // namespace bustub

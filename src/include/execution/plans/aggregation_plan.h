@@ -112,6 +112,7 @@ struct AggregateKey {
 struct AggregateValue {
   /** The aggregate values */
   std::vector<Value> aggregates_;
+  RID rid;
 };
 
 }  // namespace bustub

@@ -491,7 +491,7 @@ TEST_F(ExecutorTest, SimpleHashJoinTest) {
 }
 
 // SELECT COUNT(col_a), SUM(col_a), min(col_a), max(col_a) from test_1;
-TEST_F(ExecutorTest, DISABLED_SimpleAggregationTest) {
+TEST_F(ExecutorTest, SimpleAggregationTest) {
   const Schema *scan_schema;
   std::unique_ptr<AbstractPlanNode> scan_plan;
   {
@@ -541,7 +541,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleAggregationTest) {
 }
 
 // SELECT count(col_a), col_b, sum(col_c) FROM test_1 Group By col_b HAVING count(col_a) > 100
-TEST_F(ExecutorTest, DISABLED_SimpleGroupByAggregation) {
+TEST_F(ExecutorTest, SimpleGroupByAggregation) {
   const Schema *scan_schema;
   std::unique_ptr<AbstractPlanNode> scan_plan;
   {
@@ -562,24 +562,27 @@ TEST_F(ExecutorTest, DISABLED_SimpleGroupByAggregation) {
     const AbstractExpression *col_c = MakeColumnValueExpression(*scan_schema, 0, "colC");
     // Make group bys
     std::vector<const AbstractExpression *> group_by_cols{col_b};
-    const AbstractExpression *groupby_b = MakeAggregateValueExpression(true, 0);
+    
     // Make aggregates
     std::vector<const AbstractExpression *> aggregate_cols{col_a, col_c};
     std::vector<AggregationType> agg_types{AggregationType::CountAggregate, AggregationType::SumAggregate};
     const AbstractExpression *count_a = MakeAggregateValueExpression(false, 0);
+    const AbstractExpression *groupby_b = MakeAggregateValueExpression(true, 1);
+    const AbstractExpression* sum_c=MakeAggregateValueExpression(false,2);
     // Make having clause
     const AbstractExpression *having = MakeComparisonExpression(
         count_a, MakeConstantValueExpression(ValueFactory::GetIntegerValue(100)), ComparisonType::GreaterThan);
 
     // Create plan
-    agg_schema = MakeOutputSchema({{"countA", count_a}, {"colB", groupby_b}});
+    agg_schema = MakeOutputSchema({{"countA", count_a}, {"colB", groupby_b}, {"sumC", sum_c} });
     agg_plan = std::make_unique<AggregationPlanNode>(agg_schema, scan_plan.get(), having, std::move(group_by_cols),
                                                      std::move(aggregate_cols), std::move(agg_types));
   }
 
   std::vector<Tuple> result_set{};
+  // std::cout<<"groupby start\n";
   GetExecutionEngine()->Execute(agg_plan.get(), &result_set, GetTxn(), GetExecutorContext());
-
+  // std::cout<<"execution end\n";
   std::unordered_set<int32_t> encountered{};
   for (const auto &tuple : result_set) {
     // Should have count_a > 100
