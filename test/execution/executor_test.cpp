@@ -582,7 +582,7 @@ TEST_F(ExecutorTest, SimpleGroupByAggregation) {
   std::vector<Tuple> result_set{};
   // std::cout<<"groupby start\n";
   GetExecutionEngine()->Execute(agg_plan.get(), &result_set, GetTxn(), GetExecutorContext());
-  // std::cout<<"execution end\n";
+
   std::unordered_set<int32_t> encountered{};
   for (const auto &tuple : result_set) {
     // Should have count_a > 100
@@ -597,7 +597,7 @@ TEST_F(ExecutorTest, SimpleGroupByAggregation) {
 }
 
 // SELECT colA, colB FROM test_3 LIMIT 10
-TEST_F(ExecutorTest, DISABLED_SimpleLimitTest) {
+TEST_F(ExecutorTest, SimpleLimitTest) {
   auto *table_info = GetExecutorContext()->GetCatalog()->GetTable("test_3");
   auto &schema = table_info->schema_;
 
@@ -613,6 +613,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleLimitTest) {
 
   // Execute sequential scan with limit
   std::vector<Tuple> result_set{};
+
   GetExecutionEngine()->Execute(limit_plan.get(), &result_set, GetTxn(), GetExecutorContext());
 
   // Verify results
@@ -625,7 +626,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleLimitTest) {
 }
 
 // SELECT DISTINCT colC FROM test_7
-TEST_F(ExecutorTest, DISABLED_SimpleDistinctTest) {
+TEST_F(ExecutorTest, SimpleDistinctTest) {
   auto *table_info = GetExecutorContext()->GetCatalog()->GetTable("test_7");
   auto &schema = table_info->schema_;
 
@@ -641,7 +642,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleDistinctTest) {
   // Execute sequential scan with DISTINCT
   std::vector<Tuple> result_set{};
   GetExecutionEngine()->Execute(distinct_plan.get(), &result_set, GetTxn(), GetExecutorContext());
-
+  
   // Verify results; colC is cyclic on 0 - 9
   ASSERT_EQ(result_set.size(), 10);
 

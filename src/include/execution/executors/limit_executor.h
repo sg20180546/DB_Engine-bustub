@@ -17,6 +17,7 @@
 
 #include "execution/executors/abstract_executor.h"
 #include "execution/plans/limit_plan.h"
+#include "execution/plans/seq_scan_plan.h"
 
 namespace bustub {
 
@@ -53,5 +54,10 @@ class LimitExecutor : public AbstractExecutor {
   const LimitPlanNode *plan_;
   /** The child executor from which tuples are obtained */
   std::unique_ptr<AbstractExecutor> child_executor_;
+  size_t limit_;
+  size_t cur_;
+  const Schema* key_schema_;
+  const Schema* child_schema_;
+  std::vector<uint32_t> key_attrs_;
 };
 }  // namespace bustub

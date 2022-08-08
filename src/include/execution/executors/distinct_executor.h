@@ -17,7 +17,9 @@
 
 #include "execution/executors/abstract_executor.h"
 #include "execution/plans/distinct_plan.h"
-
+#include "common/util/hash_util.h"
+#include "execution/expressions/column_value_expression.h"
+#include "execution/plans/seq_scan_plan.h"
 namespace bustub {
 
 /**
@@ -53,5 +55,11 @@ class DistinctExecutor : public AbstractExecutor {
   const DistinctPlanNode *plan_;
   /** The child executor from which tuples are obtained */
   std::unique_ptr<AbstractExecutor> child_executor_;
+
+  std::unordered_set<hash_t> encounterd_;
+  const Schema* child_schema_;
+  HashUtil hash_util_;
+  // const ColumnValueExpression* distinct_expr_;
+  // std::vector<uint32_t> key_attrs_;
 };
 }  // namespace bustub

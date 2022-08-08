@@ -58,14 +58,25 @@
 ### 3) Concurrency
 * Use Two Phase Lock(Latch) to prevent Deadlock
 
-## 3. Project 3 : Query Execution (progressing)
+## 3. Project 3 : Query Execution (clear at 8/8/2022)
+* Overall Structure
+* Predicate
 * Sequential Scan
    - implementation defect : No considiration about sub query ( e.g. SELECT * from (SELECT * FROM table1) )
 * Insert
+   - Raw Insert, SubQuery Insert
 * Delete
+* Indexing
+   - Insert, Scan, Update, Delete
+* Update
 * Naive(stupid) block join
 * Hash Join
    - `std::unordered_map<hash_t,std::pair<RID,Tuple>>` : unordered map is implemented with Hash Table
    - implementation defect : If there are OVERLAPPED join keys(value) in left table , it would malfunctioned . 
-
+* Aggregation
+   - sum, count, min, max
+   - Group By , having
+* Limit
+* Distinct
+   - implementation defect : There is no column index of Distinct Column (cannot deal with ` SELECT DISTINCT colC, sum(colA), count(colB) FROM test_7`)
 ---------------------------------------------------

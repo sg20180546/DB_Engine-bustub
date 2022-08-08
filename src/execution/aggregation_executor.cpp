@@ -44,7 +44,7 @@ void AggregationExecutor::Init() {
 }
 
 auto AggregationExecutor::Next(Tuple *tuple, RID *rid) -> bool { 
-    std::cout<<"next\n";
+    // std::cout<<"next\n";
     
     while(iterator_!=agg_hash_table_.End()){
    
@@ -52,29 +52,31 @@ auto AggregationExecutor::Next(Tuple *tuple, RID *rid) -> bool {
         auto key=iterator_.Key();
         auto value=iterator_.Val();
         std::vector<Value> merged;
+        std::vector<Value> result;
         merged.reserve(key_schema_->GetColumnCount());
       
-        // merged.reserve(key.group_bys_.size()+value.aggregates_.size());
-        // merged.insert(merged.end(),key.group_bys_.begin(),key.group_bys_.end());
-        // merged.insert(merged.end(),value.aggregates_.begin(),value.aggregates_.end());
+        merged.reserve(key.group_bys_.size()+value.aggregates_.size());
+        merged.insert(merged.end(),key.group_bys_.begin(),key.group_bys_.end());
+        merged.insert(merged.end(),value.aggregates_.begin(),value.aggregates_.end());
 
         for(auto column: key_schema_->GetColumns()) {
            auto agg_expr=reinterpret_cast<const AggregateValueExpression*>(column.GetExpr());
            // construct tuple
         //    std::cout<<"construct tuple\n";
-           auto val=agg_expr->EvaluateAggregate(key.group_bys_,value.aggregates_);
+           auto val=agg_expr->EvaluateAggregate(key.group_bys_,merged);
         //    std::cout<<"here?\n";
-           merged.push_back(val);
+        //    merged.push_back(val);
+           result.push_back(val);
         }
 
         if(having!=nullptr) {
             if(having->EvaluateAggregate(key.group_bys_,value.aggregates_).GetAs<bool>()){
-                std::cout<<"true\n";
+                // std::cout<<"true\n";
                 *rid=value.rid;
-                std::cout<<"herel? "<<merged.size()<<"\n";
+                // std::cout<<"herel? "<<merged.size()<<"\n";
                 assert(key_schema_!=nullptr);
-                *tuple=Tuple(merged,key_schema_); // <- bug point
-                std::cout<<"next\n";
+                *tuple=Tuple(result,key_schema_); // <- bug point
+                // std::cout<<"next\n";
                 iterator_.Next();
                 return true;                    
             }
