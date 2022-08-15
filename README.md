@@ -79,4 +79,12 @@
 * Limit
 * Distinct
    - implementation defect : There is no column index of Distinct Column (cannot deal with ` SELECT DISTINCT colC, sum(colA), count(colB) FROM test_7`)
+
+## 4. Project 4 : Concurrency (progressing)
+* LockManager
+   - 2PL
+   - DeadLock Prevention (based on timestamp)
+      - Wound Wait, If Requesting txn have high priority(low timestamp) than Lock-Holding txn, the low priority(high timestamp)
+         releases lock and aborts.
+* TransactionManager
 ---------------------------------------------------
