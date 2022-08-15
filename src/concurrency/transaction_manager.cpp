@@ -77,6 +77,7 @@ void TransactionManager::Abort(Transaction *txn) {
   }
   table_write_set->clear();
   // Rollback index updates
+
   auto index_write_set = txn->GetIndexWriteSet();
   while (!index_write_set->empty()) {
     auto &item = index_write_set->back();
@@ -103,6 +104,7 @@ void TransactionManager::Abort(Transaction *txn) {
   index_write_set->clear();
 
   // Release all the locks.
+  
   ReleaseLocks(txn);
   // Release the global transaction latch.
   global_txn_latch_.RUnlock();
