@@ -37,18 +37,23 @@ class LockManager {
 
   class LockRequest {
    public:
-    LockRequest(txn_id_t txn_id, LockMode lock_mode) : txn_id_(txn_id), lock_mode_(lock_mode), granted_(false) {}
-
+    LockRequest(txn_id_t txn_id, LockMode lock_mode, bool granted=false) : txn_id_(txn_id), lock_mode_(lock_mode), granted_(granted) {}
+    LockRequest() {}
     txn_id_t txn_id_;
     LockMode lock_mode_;
     bool granted_;
+    void operator=(LockRequest lq){
+      txn_id_=lq.txn_id_;
+      lock_mode_=lq.lock_mode_;
+      granted_=lq.granted_;
+    }
   };
 
   class LockRequestQueue {
    public:
-    std::list<LockRequest> request_queue_;
+    std::vector<LockRequest> request_queue_;
     // for notifying blocked transactions on this rid
-    std::mutex m_;
+    // std::mutex m_;
     std::condition_variable cv_;
     // txn_id of an upgrading transaction (if any)
     txn_id_t upgrading_ = INVALID_TXN_ID;
@@ -117,9 +122,21 @@ class LockManager {
       }
       if(tstate==TransactionState::SHRINKING) {
         txn->SetState(TransactionState::ABORTED);
-        return false;
+        throw TransactionAbortException(txn->GetTransactionId(),AbortReason::LOCK_ON_SHRINKING);
       }
       return true;
+  }
+  void IsItAborted(Transaction* txn,LockManager::LockRequestQueue* lq){
+    auto tid=txn->GetTransactionId();
+    if(txn->GetState()==TransactionState::ABORTED){
+      for(auto iter=lq->request_queue_.begin();iter!=lq->request_queue_.end();++iter){
+        if(iter->txn_id_==tid){
+          lq->request_queue_.erase(iter);
+        }
+      }
+      
+      throw TransactionAbortException(txn->GetTransactionId(),AbortReason::DEADLOCK); // Aborted From Wound-Wait DeadLock Preventing
+    }
   }
  private:
   std::mutex latch_;

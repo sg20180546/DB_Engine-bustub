@@ -87,4 +87,6 @@
       - Wound Wait, If Requesting txn have high priority(low timestamp) than Lock-Holding txn, the low priority(high timestamp)
          releases lock and aborts.
 * TransactionManager
+
+## 5. Recovery
 ---------------------------------------------------

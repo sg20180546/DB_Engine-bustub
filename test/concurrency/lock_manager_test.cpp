@@ -56,7 +56,7 @@ void BasicTest1() {
     }
     for (const RID &rid : rids) {
       res = lock_mgr.Unlock(txns[txn_id], rid);
-      EXPECT_TRUE(res);
+      EXPECT_TRUE(res)<<"failed at "<<txn_id;
       CheckShrinking(txns[txn_id]);
     }
     txn_mgr.Commit(txns[txn_id]);
@@ -93,7 +93,6 @@ void TwoPLTest() {
   EXPECT_TRUE(res);
   CheckGrowing(txn);
   CheckTxnLockSize(txn, 1, 0);
-
   res = lock_mgr.LockExclusive(txn, rid1);
   EXPECT_TRUE(res);
   CheckGrowing(txn);
@@ -108,11 +107,14 @@ void TwoPLTest() {
     lock_mgr.LockShared(txn, rid0);
     CheckAborted(txn);
     // Size shouldn't change here
+
     CheckTxnLockSize(txn, 0, 1);
+
   } catch (TransactionAbortException &e) {
     std::cout << e.GetInfo() << std::endl;
     CheckAborted(txn);
     // Size shouldn't change here
+
     CheckTxnLockSize(txn, 0, 1);
   }
 

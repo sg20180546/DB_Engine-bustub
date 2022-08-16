@@ -22,7 +22,9 @@ namespace bustub {
  *
  * This thread runs forever until system shutdown/StopFlushThread
  */
-void LogManager::RunFlushThread() {}
+void LogManager::RunFlushThread() {
+    enable_logging=true;
+}
 
 /*
  * Stop and join the flush thread, set enable_logging = false
