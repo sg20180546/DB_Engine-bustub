@@ -4,6 +4,8 @@
 ![image](https://user-images.githubusercontent.com/81512075/185784815-97f64a67-004d-46f7-95e0-675e38d96acb.png)
 
 ### 1) LRU Replacer
+![image](https://user-images.githubusercontent.com/81512075/185791548-b44eb3ae-7f50-4729-aa7c-926b4db0c486.png)
+
 * Last Recently Used Algorithm by double linked list
 * Unpinned Pages' physical frame id is hang on list
 * Most recently used unpinned page is hang on front of list.
@@ -16,12 +18,20 @@
 * Comparing `BufferPoolManager::free_list_` to LRU list, free list is 'explicitly DELETED physical frame' list but LRU list store 'UNPINNED POTENTIALLY evicted physical frame' that is still hang on to physical frame
 * Physical frame and Page table declare as `Page* page` and `std::unordered_map<page_id_t,frame_id_t> page_table`
 ### 3) Parallel Buffer Pool Manager
+![image](https://user-images.githubusercontent.com/81512075/185791567-1bb14fd7-ea48-46e2-ad6a-a159a3515c5c.png)
+
 * By divide entire pool size by number of instance, rather than 1 instance manage whole pool
 * Latch : Semaphore protecting SGA(Memory Resource, not block)
 * Small critical section makes parallelism higher
    
 ## 2. Project 2 : Hash Table (clear at 18/7/2022)
+![image](https://user-images.githubusercontent.com/81512075/185791584-5fb842a8-f263-4fa4-9ae5-7325f3ff1e8a.png)
+
 ### 1) Hash table bucket page, Hash table directory page
+![image](https://user-images.githubusercontent.com/81512075/185791595-ccfbaf95-3dca-441d-ab78-9e2db93a5bd1.png)
+![image](https://user-images.githubusercontent.com/81512075/185791618-5f6984b3-a7ab-4bf0-9d61-85cad66b7d77.png)
+
+
 * Hash Table Directory manage 512 Hash table bucket page
 * 512 local_depths_=512 bytes , 512 bucket_page_ids=2048 bytes
 ### 2) Extendible Hash Table
