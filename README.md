@@ -1,6 +1,8 @@
 # Structure Database Engine Toy Project : bustub
 ## This repository is based on [Carnegi Melon University CMU 15-445/645](https://15445.courses.cs.cmu.edu/fall2021/assignments.html) [DATABASE SYSTEM course](https://youtu.be/v4bU6n97Vr8).
 ## 1. Project 1 : Buffer Pool Manager (clear at 3/7/2022)
+![image](https://user-images.githubusercontent.com/81512075/185784815-97f64a67-004d-46f7-95e0-675e38d96acb.png)
+
 ### 1) LRU Replacer
 * Last Recently Used Algorithm by double linked list
 * Unpinned Pages' physical frame id is hang on list
