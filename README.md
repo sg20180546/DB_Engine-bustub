@@ -68,7 +68,7 @@
       - Decrease local depth of Buddy/Empty Buckets
       - Check CanShrink() to decrease global depth, which is recursive function
 ### 3) Concurrency
-* Use Two Phase Lock(Latch) to prevent Deadlock
+* std::lock_guard lock(latch_)
 
 ## 3. Project 3 : Query Execution (clear at 8/8/2022)
 * Overall Structure
