@@ -98,7 +98,12 @@
    - DeadLock Prevention (based on timestamp)
       - Wound Wait, If Requesting txn have high priority(low timestamp) than Lock-Holding txn, the low priority(high timestamp)
          releases lock and aborts.
+   - If Isolation Level == ReadUncommited, Shared Lock cannot be allowed
 * TransactionManager
+<img src = "https://user-images.githubusercontent.com/81512075/187020344-6bb00ffa-cd02-4fb4-a1be-e58769d070b7.png" width="500" height="300">\
+
+![image](https://user-images.githubusercontent.com/81512075/187020350-799981e5-3018-4264-bcea-19d96ca87601.png)
+
 
 ## 5. Recovery
 ---------------------------------------------------
