@@ -24,31 +24,21 @@ void UpdateExecutor::Init() {
   index_infos_ = exec_ctx_->GetCatalog()->GetTableIndexes(table_info_->name_);
   txn_=exec_ctx_->GetTransaction();
   if(child_executor_.get()==nullptr) {
-
+    return;
   } else {
     assert(child_executor_.get()!=nullptr);
-    std::vector<Tuple> child_tp_result_set;
-    std::vector<RID> child_rid_result_set;
-    size_t size;
     Tuple tuple;
-    Tuple prev;
+    Tuple update_tuple;
     RID rid;
 
     child_executor_->Init();
     
     while(child_executor_->Next(&tuple,&rid)) {
-      child_rid_result_set.push_back(rid);
-      child_tp_result_set.push_back(tuple);
-    }
-    size=child_rid_result_set.size();
-    for(size_t i = 0; i<size;i++) {
-      prev=child_tp_result_set[i];
-      tuple=GenerateUpdatedTuple(child_tp_result_set[i]);
-      table_info_->table_->UpdateTuple(tuple,child_rid_result_set[i],txn_);
-      // table_info_->table_->UpdateTuple(tuple,child_rid_result_set[i],txn_)
-      for(auto index_info : index_infos_) {
-        index_info->index_->DeleteEntry(prev,child_rid_result_set[i],txn_);
-        index_info->index_->InsertEntry(tuple,child_rid_result_set[i],txn_);
+      update_tuple=GenerateUpdatedTuple(tuple);
+      table_info_->table_->UpdateTuple(update_tuple,rid,txn_);
+      for(auto index_info: index_infos_) {
+        index_info->index_->DeleteEntry(tuple,rid,txn_);
+        index_info->index_->InsertEntry(update_tuple,rid,txn_);
       }
     }
   }

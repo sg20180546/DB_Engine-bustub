@@ -88,12 +88,12 @@ auto BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) -> Page * {
   // 2.   Pick a victim page P from either the free list or the replacer. Always pick from the free list first.
   // 3.   Update P's metadata, zero out memory and add P to the page table.
   // 4.   Set the page ID output parameter. Return a pointer to P.
-
+  
   frame_id_t frame_id = GetFrameID();
   if (frame_id == -1) {
     return nullptr;
   }
-  // printf("left free_list : ");
+
 
   class Page *page = &pages_[frame_id];
   page_id_t page_id_tmp = page->GetPageId();
@@ -114,6 +114,7 @@ auto BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) -> Page * {
   *page_id = page_id_tmp;
   free_list_.remove(frame_id);
   replacer_->Pin(frame_id);
+
   return page;
 }
 
@@ -124,26 +125,29 @@ auto BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) -> Page * {
     frame_id = page_table_.at(page_id);
     page = &pages_[frame_id];
   } catch (const std::out_of_range &e) {
-    // printf("Fetch page :%d here?\n",page_id);
+  
     frame_id = GetFrameID();
     if (frame_id == -1) {
       return nullptr;
     }
-    // printf("fetchpage :Fid %d\n",frame_id);
+
     page = &pages_[frame_id];
     if (page->IsDirty()) {
       disk_manager_->WritePage(page->GetPageId(), page->GetData());
     }
+
     page_table_.insert({page_id, frame_id});
 
-    page->WPinLatch();
+    page->WLatch();
     page->ResetMemory();
     page->SetPageId(page_id);
     disk_manager_->ReadPage(page_id, page->GetData());
     page->ModifyPinCount(1);
-    page->WUnPinLatch();
+    page->WUnlatch();
   }
+
   replacer_->Pin(frame_id);
+
   return page;
 }
 
@@ -215,16 +219,13 @@ void BufferPoolManagerInstance::ValidatePageId(const page_id_t page_id) const {
 
 auto BufferPoolManagerInstance::GetFrameID() -> frame_id_t {
   frame_id_t ret = -1;
-  // free_list_latch_.lock();
+
   if (!free_list_.empty()) {
     ret = free_list_.front();
     free_list_.pop_front();
-    // free_list_latch_.unlock();
   } else {
-    // replacer_latch_.lock();
     replacer_->Victim(&ret);
-    // replacer_latch_.unlock();
-  }  //// evict page_id in page_table_ which have value with frame
+  } 
   return ret;
 }
 }  // namespace bustub

@@ -25,13 +25,6 @@ void AggregationExecutor::Init() {
     having=plan_->GetHaving();
     child_->Init();
 
-    // if(plan_->GetGroupBys().empty()){
-
-    // }else {
-    //     assert(child_!=nullptr);
-    //     child_->Init();
-
-    // }
     Tuple tp;
     RID r;
     while(child_->Next(&tp,&r)) {
@@ -44,7 +37,6 @@ void AggregationExecutor::Init() {
 }
 
 auto AggregationExecutor::Next(Tuple *tuple, RID *rid) -> bool { 
-    // std::cout<<"next\n";
     
     while(iterator_!=agg_hash_table_.End()){
    
@@ -53,7 +45,6 @@ auto AggregationExecutor::Next(Tuple *tuple, RID *rid) -> bool {
         auto value=iterator_.Val();
         std::vector<Value> merged;
         std::vector<Value> result;
-        merged.reserve(key_schema_->GetColumnCount());
       
         merged.reserve(key.group_bys_.size()+value.aggregates_.size());
         merged.insert(merged.end(),key.group_bys_.begin(),key.group_bys_.end());
@@ -61,35 +52,28 @@ auto AggregationExecutor::Next(Tuple *tuple, RID *rid) -> bool {
 
         for(auto column: key_schema_->GetColumns()) {
            auto agg_expr=reinterpret_cast<const AggregateValueExpression*>(column.GetExpr());
-           // construct tuple
-        //    std::cout<<"construct tuple\n";
            auto val=agg_expr->EvaluateAggregate(key.group_bys_,merged);
-        //    std::cout<<"here?\n";
-        //    merged.push_back(val);
            result.push_back(val);
         }
 
         if(having!=nullptr) {
             if(having->EvaluateAggregate(key.group_bys_,value.aggregates_).GetAs<bool>()){
-                // std::cout<<"true\n";
                 *rid=value.rid;
-                // std::cout<<"herel? "<<merged.size()<<"\n";
                 assert(key_schema_!=nullptr);
-                *tuple=Tuple(result,key_schema_); // <- bug point
-                // std::cout<<"next\n";
+                *tuple=Tuple(result,key_schema_);
                 iterator_.Next();
                 return true;                    
             }
         } else {
             *rid=value.rid;
-            *tuple=Tuple(merged,key_schema_);
+            *tuple=Tuple(result,key_schema_);
             iterator_.Next();
             return true;    
         }
-        std::cout<<"end\n";
+
 
         iterator_.Next();
-        // *tuple=Tuple(merged,plan_->OutputSchema());
+
 
 
     }

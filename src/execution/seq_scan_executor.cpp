@@ -28,8 +28,15 @@ void SeqScanExecutor::Init() {
   
     for(uint32_t i=0;i<column_count;i++){
         column_name.assign(plan_->OutputSchema()->GetColumn(i).GetName());
-        column_idx=table_info_->schema_.GetColIdx(column_name);
-        // if not found, exception handling
+        try
+        {
+           column_idx=table_info_->schema_.GetColIdx(column_name);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+            return;
+        }
         key_attrs_.push_back(column_idx);
     }
 }
@@ -44,7 +51,6 @@ auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
     if(iterator_==end) {
         return false;
     }
-    
     if(predicate!=nullptr) {
         for(;iterator_!=end;iterator_++) {
             Tuple tp= iterator_->KeyFromTuple(table_info_->schema_,*key_schema,key_attrs_);
@@ -54,7 +60,6 @@ auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
                 iterator_++;
                 return true;
             }
-            // iterator_++;
         }
         return false;
     } else {

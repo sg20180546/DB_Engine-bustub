@@ -23,21 +23,6 @@ DistinctExecutor::DistinctExecutor(ExecutorContext *exec_ctx, const DistinctPlan
 void DistinctExecutor::Init() {
     child_schema_=child_executor_->GetOutputSchema();
     child_executor_->Init();
-    // distinct_expr_=reinterpret_cast<const ColumnValueExpression*>(child_schema_->GetColumn(0).GetExpr());
-
-    // uint32_t column_idx;
-    // std::string column_name;
-    // uint32_t column_count=plan_->OutputSchema()->GetColumnCount();
-    // std::cout<<"getcolumncout : "<<column_count<<"\n";    
-    // auto table_info=exec_ctx_->GetCatalog()->GetTable(reinterpret_cast<const SeqScanPlanNode*>(plan_->GetChildPlan())->GetTableOid());
-    // for(uint32_t i=0;i<column_count;i++){
-    //     column_name.assign(plan_->OutputSchema()->GetColumn(i).GetName());
-    //     column_idx=table_info->schema_.GetColIdx(column_name);
-    //     std::cout<<column_idx<<"\n";
-    //     // if not found, exception handling
-    //     key_attrs_.push_back(column_idx);
-    // }
-    // std::cout<<"init end\n";
 }
 
 auto DistinctExecutor::Next(Tuple *tuple, RID *rid) -> bool {

@@ -43,7 +43,7 @@ void InsertExecutor::Init() {
     } else {
         assert(child_executor_.get()!=nullptr);
         std::vector<Tuple> child_result_set;
-        // std::cout<<child_executor_->GetName()<<"\n";
+
         child_executor_->Init();
 
         Tuple tuple;
